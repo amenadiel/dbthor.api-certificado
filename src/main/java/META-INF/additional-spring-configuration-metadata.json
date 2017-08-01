@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "swagger.info.title",
+      "type": "java.lang.String",
+      "description": "swagger.info.title"
+    },
+    {
+      "name": "swagger.info.description",
+      "type": "java.lang.String",
+      "description": "swagger.info.description"
+    },
+    {
+      "name": "swagger.info.groupName",
+      "type": "java.lang.String",
+      "description": "swagger.info.groupName"
+    },
+    {
+      "name": "swagger.info.version",
+      "type": "java.lang.String",
+      "description": "swagger.info.version"
+    },
+    {
+      "name": "swagger.info.license",
+      "type": "java.lang.String",
+      "description": "swagger.info.license"
+    },
+    {
+      "name": "swagger.pathMapping",
+      "type": "java.lang.String",
+      "description": "swagger.pathMapping"
+    },
+    {
+      "name": "swagger.ui.webpage",
+      "type": "java.lang.String",
+      "description": "swagger.ui.webpage"
+    },
+    {
+      "name": "restful.timeout.connect",
+      "type": "java.lang.Integer",
+      "description": "Timeout connect for RESTful."
+    },
+    {
+      "name": "restful.timeout.read",
+      "type": "java.lang.Integer",
+      "description": "Timeout read for RESTful."
+    }
+  ]
+}

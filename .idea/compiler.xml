@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="dbt-domain-certificado" />
+        <module name="dbt-domain-documento" />
+        <module name="dbt-domain-persona" />
+        <module name="dbthor-dte-data-service" />
+        <module name="dte-data-service" />
+        <module name="service" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="1.8">
+      <module name="dbt-domain-certificado" target="1.8" />
+      <module name="dbt-domain-documento" target="1.8" />
+      <module name="dbt-domain-persona" target="1.8" />
+      <module name="dbthor-dte-data-service" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
