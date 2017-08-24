@@ -42,25 +42,6 @@
 
     <profiles>
         <profile>
-            <id>local</id>
-            <properties>
-                <activatedProperties>local</activatedProperties>
-                <profilePrefix>ds-</profilePrefix>
-                <log.path></log.path>
-                <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
-                <!--Base de datos -->
-                <spring.datasource.url>jdbc:mysql://10.10.100.211:3306</spring.datasource.url>
-                <spring.datasource.username>root</spring.datasource.username>
-                <spring.datasource.password>dbt2016</spring.datasource.password>
-                <!--Base de datos esquemas -->
-                <db.dominio.certificado.catalogSchema>ds_dbthor_dte</db.dominio.certificado.catalogSchema>
-
-            </properties>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-        </profile>
-        <profile>
             <id>desa</id>
             <properties>
                 <activatedProperties>desa</activatedProperties>
@@ -73,6 +54,9 @@
                 <spring.datasource.password>dbt2016</spring.datasource.password>
                 <!--Base de datos esquemas -->
                 <db.dominio.certificado.catalogSchema>ds_dbthor_dte</db.dominio.certificado.catalogSchema>
+
+                <url.srv.base>http://10.10.100.210:8080</url.srv.base>
+                <url.srv.persona.path>/ds-api-persona-v.1.0</url.srv.persona.path>
 
             </properties>
             <activation>
@@ -93,6 +77,9 @@
                 <!--Base de datos esquemas -->
                 <db.dominio.certificado.catalogSchema>ds_dbthor_dte</db.dominio.certificado.catalogSchema>
 
+                <url.srv.base>http://10.0.0.47:8050</url.srv.base>
+                <url.srv.persona.path>/qa-api-persona-v.1.0</url.srv.persona.path>
+
             </properties>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -111,6 +98,9 @@
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
                 <!--Base de datos esquemas -->
                 <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
+
+                <url.srv.base>http://10.0.0.169</url.srv.base>
+                <url.srv.persona.path>/api-persona-v.1.0</url.srv.persona.path>
 
             </properties>
             <activation>
@@ -257,6 +247,13 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
             <version>${swagger.io.version}</version>
+        </dependency>
+
+        <!--Spring.IO devtools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
         </dependency>
 
     </dependencies>

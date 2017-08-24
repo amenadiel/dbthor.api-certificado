@@ -24,7 +24,6 @@ import static com.dbthor.tools.IOTools.decodeBase64Byte;
  */
 @Log4j2
 public class CertificadoDigital {
-    private static final Logger logger = LogManager.getLogger(CertificadoDigital.class.getName());
     private KeyStore ks;            //Certificado contenedor
     private String dataEncodeB64;   //Certificado en formato Encode Base 64
     @Getter private String password;        //Clave del certificado
@@ -51,11 +50,11 @@ public class CertificadoDigital {
      */
     public void loadCertificado(String certificadoEncodeB64, String mail, String password, String trxId)
             throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
-        log.debug("{} START loadCertificado()", trxId );
-        log.debug("{}   PARAM certData  : {}", trxId,
+        log.debug("{} START ", trxId );
+        log.debug("{} PARAM certData : {}", trxId,
                 (certificadoEncodeB64!=null && certificadoEncodeB64.length()>30?certificadoEncodeB64.substring(0,30):certificadoEncodeB64) );
-        log.debug("{}   PARAM mail      : {}", trxId, mail );
-        log.debug("{}   PARAM password  : {}", trxId, password );
+        log.debug("{} PARAM mail     : {}", trxId, mail );
+        log.debug("{} PARAM password : {}", trxId, password );
 
         this.dataEncodeB64 =  certificadoEncodeB64;
         this.password =  password;
@@ -82,7 +81,7 @@ public class CertificadoDigital {
         log.debug("{}  - subject        :{}", trxId,subject );
         log.debug("{}  - issuer         :{}", trxId,issuer );
 
-        log.debug("{} END loadCertificado()", trxId );
+        log.debug("{} END", trxId );
     }
 
     /**

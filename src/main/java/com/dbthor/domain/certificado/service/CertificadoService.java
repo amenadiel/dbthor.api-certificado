@@ -342,5 +342,38 @@ public class CertificadoService {
 
     }
 
+    public Boolean verificaCertificado(UUID certificadoId, String password, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certificadoId: {}", trxId, certificadoId);
+        log.trace("{} PARAM password     : {}", trxId, password);
+        try {
+            CertificadoDigital cert = new CertificadoDigital();
+
+            log.debug("{} Validando que exsita el certificado", trxId);
+            ECertificadoDigital certData = getCertificadoEntity(certificadoId, trxId);
+
+            if (certData == null || certData.getDataEncode64Val() == null)
+                throw new ServiceException(ServiceExceptionCodes.NO_EXISTE_CERTIFICADO);
+
+
+            // Abre el certificado y extra la infomación basica
+            cert.loadCertificado(certData.getDataEncode64Val(), "", password, trxId.toString());
+
+//            if (!cert.getFechaExpiracion().after(new Date())) {
+//                throw new ServiceException(ServiceExceptionCodes.EXPIRADO);
+//            }
+
+            log.debug("{} END", trxId);
+            return true;
+        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+            log.warn("{} {}", trxId, e);
+            return false;
+        } catch (Exception e) {
+            ServiceException se=ServiceException.assignException(e);
+            log.error("{} {}", trxId, se.getErrorLog());
+            log.debug("{} END", trxId);
+            throw se;
+        }
+    }
 
 }

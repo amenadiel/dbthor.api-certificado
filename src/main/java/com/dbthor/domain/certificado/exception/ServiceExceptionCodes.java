@@ -23,6 +23,7 @@ public enum ServiceExceptionCodes {
     NO_EXISTE_USO_CERT("NO_EXISTE_USO_CERT","No existe uso del certificado"),
     PASSWORD_INVALIDO("PASSWORD_INVALIDO","Clave invalida"),
     ERROR_CARGA_CERT("ERROR_CARGA_CERT","Error de carga del certificado"),
+    EXPIRADO("EXPIRADO","Certificado expirado"),
 
     //Codigos de Error de PERSONA
     NO_EXISTE_PERSONA("NO_EXISTE_PERSONA","No existe persona"),
