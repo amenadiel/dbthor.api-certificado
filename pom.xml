@@ -46,7 +46,7 @@
             <properties>
                 <activatedProperties>desa</activatedProperties>
                 <profilePrefix>ds-</profilePrefix>
-                <log.path>logs/</log.path>
+                <log.path>/opt/tomcat/logs/</log.path>
                 <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
                 <!--Base de datos -->
                 <spring.datasource.url>jdbc:mysql://10.10.100.211:3306</spring.datasource.url>
