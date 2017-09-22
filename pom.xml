@@ -46,7 +46,7 @@
             <properties>
                 <activatedProperties>desa</activatedProperties>
                 <profilePrefix>ds-</profilePrefix>
-                <log.path>/opt/tomcat/logs/</log.path>
+                <log.path>logs/</log.path>
                 <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
                 <!--Base de datos -->
                 <spring.datasource.url>jdbc:mysql://10.10.100.211:3306</spring.datasource.url>
@@ -60,7 +60,7 @@
 
             </properties>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
         <profile>
@@ -71,7 +71,9 @@
                 <log.path>/opt/tomcat/logs/</log.path>
                 <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
                 <!--Base de datos -->
-                <spring.datasource.url>jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/ds_dbthor_dte</spring.datasource.url>
+                <spring.datasource.url>
+                    jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/ds_dbthor_dte
+                </spring.datasource.url>
                 <spring.datasource.username>root</spring.datasource.username>
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
                 <!--Base de datos esquemas -->
@@ -93,7 +95,9 @@
                 <log.path>/opt/tomcat/logs/</log.path>
                 <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
                 <!--Base de datos -->
-                <spring.datasource.url>jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/ds_dbthor_dte</spring.datasource.url>
+                <spring.datasource.url>
+                    jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/ds_dbthor_dte
+                </spring.datasource.url>
                 <spring.datasource.username>root</spring.datasource.username>
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
                 <!--Base de datos esquemas -->
