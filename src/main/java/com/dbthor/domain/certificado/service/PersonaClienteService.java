@@ -6,6 +6,7 @@ import com.dbthor.domain.certificado.entity.persona.EIdentificacion;
 import com.dbthor.domain.certificado.entity.persona.EPersona;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.utils.URIBuilder;
@@ -132,7 +133,12 @@ public class PersonaClienteService {
             log.debug("{} WS URL: {}", trxId, url.toString());
             String jsonResponse = restCall.callGet(url, trxId);
 
-            EPersona response = (new ObjectMapper()).readValue(jsonResponse, new TypeReference<EPersona>() {});
+            ObjectMapper objectMapper =  new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+
+            EPersona response = objectMapper.readValue(jsonResponse, new TypeReference<EPersona>() {});
+
 
             log.debug("{} END", trxId);
             return response;

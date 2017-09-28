@@ -118,18 +118,11 @@ public class CertificadoService {
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
 
-            String token= dteSiiSrv.getSiiToken(certId,password, trxId);
+            //certRepo.save(certificado);
 
-            if (token==null)
-                throw new ServiceException(ServiceExceptionCodes.INVALIDO);
 
-            if (cert.getFechaExpiracion().after(now)) {
-                //Validar que se genera token
-//                String token= dteSiiSrv.getSiiToken(certId,password, trxId);
-//
-//                if (token==null)
-//                    throw new ServiceException(ServiceExceptionCodes.INVALIDO);
-
+//            if (cert.getFechaExpiracion().after(now)) {
+            if (true) {
                 certRepo.save(certificado);
 
                 //Se genera los datos de la entidad Persona Certificado y su uso
@@ -143,8 +136,10 @@ public class CertificadoService {
                 // Se graba la informacion en la base de datos
                 logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
 
-            } else
+            } else {
+                certificado=null;
                 logger.info("{} Certificado no ha sido almacenado", trxId);
+            }
 
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
