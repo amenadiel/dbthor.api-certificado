@@ -57,6 +57,7 @@
 
                 <url.srv.base>http://10.10.100.210:8080</url.srv.base>
                 <url.srv.persona.path>/ds-api-persona-v.1.0</url.srv.persona.path>
+                <url.srv.dte.path>/ds-api-dte-v.1.0</url.srv.dte.path>
 
             </properties>
             <activation>
@@ -103,6 +104,7 @@
 
                 <url.srv.base>http://10.0.0.47:8050</url.srv.base>
                 <url.srv.persona.path>/qa-api-persona-v.1.0</url.srv.persona.path>
+                <url.srv.dte.path>/qa-api-dte-v.1.0</url.srv.dte.path>
 
             </properties>
             <activation>
@@ -127,6 +129,7 @@
 
                 <url.srv.base>http://10.0.0.169</url.srv.base>
                 <url.srv.persona.path>/api-persona-v.1.0</url.srv.persona.path>
+                <url.srv.dte.path>/api-dte-v.1.0</url.srv.dte.path>
 
             </properties>
             <activation>

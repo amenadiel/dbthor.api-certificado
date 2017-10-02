@@ -46,6 +46,7 @@ public class CertificadoService {
     @Autowired private IPersonaCertificadoDigitalRepository personaCertRepo;
     @Autowired private PersonaClienteService persSrv;
     @Autowired private ICertificadoDigitalTokenRepository certTokenRepo;
+    @Autowired private DteSiiService dteSiiSrv;
 
     //------------------------------------------------------------------------------------------------------------------
     /**
@@ -117,7 +118,18 @@ public class CertificadoService {
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
 
+            String token= dteSiiSrv.getSiiToken(certId,password, trxId);
+
+            if (token==null)
+                throw new ServiceException(ServiceExceptionCodes.INVALIDO);
+
             if (cert.getFechaExpiracion().after(now)) {
+                //Validar que se genera token
+//                String token= dteSiiSrv.getSiiToken(certId,password, trxId);
+//
+//                if (token==null)
+//                    throw new ServiceException(ServiceExceptionCodes.INVALIDO);
+
                 certRepo.save(certificado);
 
                 //Se genera los datos de la entidad Persona Certificado y su uso
@@ -129,10 +141,11 @@ public class CertificadoService {
                     personaCertRepo.save(persUsoCert);
                 }
                 // Se graba la informacion en la base de datos
+                logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
 
-            }
+            } else
+                logger.info("{} Certificado no ha sido almacenado", trxId);
 
-            logger.info("Certificado Cargado y almacenado en base de datos");
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
             log.error("{} {}", trxId, e);
@@ -359,9 +372,14 @@ public class CertificadoService {
             // Abre el certificado y extra la infomación basica
             cert.loadCertificado(certData.getDataEncode64Val(), "", password, trxId.toString());
 
-//            if (!cert.getFechaExpiracion().after(new Date())) {
-//                throw new ServiceException(ServiceExceptionCodes.EXPIRADO);
-//            }
+            if (!cert.getFechaExpiracion().after(new Date())) {
+                throw new ServiceException(ServiceExceptionCodes.EXPIRADO);
+            }
+
+            String token= dteSiiSrv.getSiiToken(certificadoId,password, trxId);
+
+            if (token==null)
+                throw new ServiceException(ServiceExceptionCodes.INVALIDO);
 
             log.debug("{} END", trxId);
             return true;
