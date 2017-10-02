@@ -80,6 +80,7 @@
 
                 <url.srv.base>http://10.10.100.210:8080</url.srv.base>
                 <url.srv.persona.path>/api-persona</url.srv.persona.path>
+                <url.srv.dte.path>/api-dte</url.srv.dte.path>
 
             </properties>
             <activation>
