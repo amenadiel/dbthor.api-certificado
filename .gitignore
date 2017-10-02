@@ -1,3 +1,14 @@
-# Created by .ignore support plugin (hsz.mobi)
-/target/*
+# LOG FOLDER Ignoramos los archivos log generados para el control de veriones
+logs
+logs/
+/logs/
 /logs/*
+target
+target/
+/target/
+/target/*
+.idea
+.idea/
+/.idea/
+/.idea/*
+*.iml
