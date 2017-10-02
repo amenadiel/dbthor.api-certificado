@@ -60,6 +60,28 @@
 
             </properties>
             <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>desa-1</id>
+            <properties>
+                <activatedProperties>desa</activatedProperties>
+                <profilePrefix></profilePrefix>
+                <log.path>/opt/tomcat/logs/</log.path>
+                <warFileName>${project.artifactId}</warFileName>
+                <!--Base de datos -->
+                <spring.datasource.url>jdbc:mysql://10.10.100.211:3306</spring.datasource.url>
+                <spring.datasource.username>root</spring.datasource.username>
+                <spring.datasource.password>dbt2016</spring.datasource.password>
+                <!--Base de datos esquemas -->
+                <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
+
+                <url.srv.base>http://10.10.100.210:8080</url.srv.base>
+                <url.srv.persona.path>/api-persona</url.srv.persona.path>
+
+            </properties>
+            <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
