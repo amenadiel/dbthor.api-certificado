@@ -6,6 +6,7 @@ import com.dbthor.domain.certificado.entity.ServiceResponseType;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
 import com.dbthor.domain.certificado.service.CertificadoService;
+import com.dbthor.domain.certificado.service.DteSiiService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -37,6 +38,7 @@ public class CertificadoServiceController {
     static final String BASE_URI="/certificado";
 
     @Autowired private CertificadoService certSrv;
+    @Autowired private DteSiiService dteSiiSrv;
 
     /*----------------------------------------------------------------------------------------------------------------*/
     /**
@@ -60,13 +62,19 @@ public class CertificadoServiceController {
         try {
             log.debug("{} START", trxId);
             log.debug("{} POST  {}", trxId, link.toUri().toString() );
-            //log.debug("{} PARAM personaId:                  {}", trxId, (identificacion==null?"null":identificacion.getPersonaId()));
             resp.add(link.withSelfRel());
 
             if (bodyData==null)
                 throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO);
 
             ECertificadoDigital cert = certSrv.loadCertificado(bodyData, trxId);
+
+            if (cert!= null) {
+                String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
+
+                if (token == null)
+                    throw new ServiceException(ServiceExceptionCodes.INVALIDO);
+            }
 
             resp.setDatos(cert);
         } catch (Exception e) {
@@ -166,7 +174,7 @@ public class CertificadoServiceController {
     /**
      * Cargar Certificado
      *
-     * @param bodyData  JSON con datos del certificado
+     * @param certificadoId  JSON con datos del certificado
      * @param trxId     Identificación de la transacción
      * @return          ECertificadoDigital
      */
