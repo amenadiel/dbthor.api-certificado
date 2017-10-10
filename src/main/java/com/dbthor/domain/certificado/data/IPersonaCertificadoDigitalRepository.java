@@ -42,4 +42,13 @@ public interface IPersonaCertificadoDigitalRepository extends CrudRepository<EPe
             @Param("certId") String certId,
             @Param("usoId") String usoId
     );
+
+    @Query("SELECT i FROM EPersonaCertificadoDigital i " +
+            " WHERE " +
+            "   i.certificadoDigitalId= :certId" +
+            "")
+    List<EPersonaCertificadoDigital> getCertificadoById(
+            @Param("certId") String certId
+    );
+
 }

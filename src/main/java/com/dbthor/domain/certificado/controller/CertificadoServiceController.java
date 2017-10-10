@@ -214,8 +214,83 @@ public class CertificadoServiceController {
         return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.CREATED));
     }
 
+    /**
+     * Elimina un Certificado
+     *
+     * @param certificadoId     Identificacion del certificado
+     * @param trxId             Identificación de la transacción
+     * @return                  Booelan
+     */
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{certificadoId}", produces = "application/json")
+    @ApiOperation(value = "Elimina un Certificado", notes = "Servicio que elimina un certificado")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ServiceResponseType<Boolean>> delCertificado(
+            @ApiParam(value = "Identificado del certificado")            @PathVariable UUID certificadoId
+            , @ApiParam(value = "Identificador de transacción")          @RequestParam(required = false) UUID trxId
+    ) {
+        if (trxId==null) trxId= UUID.randomUUID();
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
+                .delCertificado(certificadoId,trxId ));
+        ServiceResponseType<Boolean> resp=  new ServiceResponseType<>(trxId);
+        try {
+            log.debug("{} START", trxId);
+            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
+            resp.add(link.withSelfRel());
+
+            Boolean valido= certSrv.delCertificado(certificadoId, trxId);
+
+            resp.setDatos(valido);
+        } catch (Exception e) {
+            ServiceException se= ServiceException.assignException(e);
+            resp.addError(se);
+            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+        }
+
+        log.debug("{} END", trxId );
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+    }
 
 
+
+    /**
+     * Busca Certificados
+     *
+     * @param trxId             Identificación de la transacción
+     * @return                  Booelan
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/", produces = "application/json")
+    @ApiOperation(value = "Busca certificados", notes = "Servicio que busca certificados")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ServiceResponseType<List<ECertificadoDigital>>> buscarCertificado(
+            @ApiParam(value = "Certificado Expirado") @RequestParam(required = false) Boolean expirado
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
+    ) {
+        if (trxId==null) trxId= UUID.randomUUID();
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
+                .buscarCertificado(expirado, trxId ));
+        ServiceResponseType<List<ECertificadoDigital>> resp=  new ServiceResponseType<>(trxId);
+        try {
+            log.debug("{} START", trxId);
+            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            resp.add(link.withSelfRel());
+
+            List<ECertificadoDigital>  listCert= certSrv.buscarCertificado(expirado, trxId);
+
+            resp.setDatos(listCert);
+        } catch (Exception e) {
+            ServiceException se= ServiceException.assignException(e);
+            resp.addError(se);
+            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+        }
+
+        log.debug("{} END", trxId );
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+    }
 
 }
 

@@ -5,16 +5,14 @@ import com.dbthor.domain.certificado.data.ICertificadoDigitalRepository;
 import com.dbthor.domain.certificado.data.ICertificadoDigitalTokenRepository;
 import com.dbthor.domain.certificado.data.IPersonaCertificadoDigitalRepository;
 import com.dbthor.domain.certificado.data.ITipoCertificadoUsoRepository;
-import com.dbthor.domain.certificado.data.entity.ECertificadoDigital;
-import com.dbthor.domain.certificado.data.entity.ECertificadoDigitalToken;
-import com.dbthor.domain.certificado.data.entity.EPersonaCertificadoDigital;
-import com.dbthor.domain.certificado.data.entity.ETipoCertificadoUso;
+import com.dbthor.domain.certificado.data.entity.*;
 import com.dbthor.domain.certificado.entity.CertificadoCreateRequest;
 import com.dbthor.domain.certificado.entity.CertificadoDigital;
 import com.dbthor.domain.certificado.entity.persona.EPersona;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
 import com.dbthor.tools.DateTools;
+import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,10 +24,9 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Capa de servicio para el DTE
@@ -381,6 +378,81 @@ public class CertificadoService {
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
             log.warn("{} {}", trxId, e);
             return false;
+        } catch (Exception e) {
+            ServiceException se=ServiceException.assignException(e);
+            log.error("{} {}", trxId, se.getErrorLog());
+            log.debug("{} END", trxId);
+            throw se;
+        }
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    /**
+     * Metodo que elimina un certificado
+     *
+     * @param certificadoId     Identificacion del cerdificado (UUID)
+     * @param trxId             Identificacion de la transaccion (UUID)
+     * @return                  Boolean
+     * @throws ServiceException ServiceException
+     */
+    public Boolean delCertificado(UUID certificadoId, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certificadoId: {}", trxId, certificadoId);
+        try {
+            CertificadoDigital cert = new CertificadoDigital();
+
+            log.debug("{} Validando que exsita el certificado", trxId);
+            ECertificadoDigital certData = getCertificadoEntity(certificadoId, trxId);
+
+            if (certData == null || certData.getDataEncode64Val() == null)
+                throw new ServiceException(ServiceExceptionCodes.NO_EXISTE_CERTIFICADO);
+
+            log.debug("{} Eliminando el certificado", trxId);
+
+            List<EPersonaCertificadoDigital> listpersCert = personaCertRepo.getCertificadoById(certData.getId());
+
+            for(EPersonaCertificadoDigital e: listpersCert){
+                EPersonaCertificadoDigitalPK pk = new EPersonaCertificadoDigitalPK();
+                pk.setPersonaId(e.getPersonaId());
+                pk.setCertificadoDigitalId(e.getCertificadoDigitalId());
+                personaCertRepo.delete(pk);
+            }
+
+            certRepo.delete(certData.getId());
+
+            log.debug("{} END", trxId);
+            return true;
+        } catch (Exception e) {
+            ServiceException se=ServiceException.assignException(e);
+            log.error("{} {}", trxId, se.getErrorLog());
+            log.debug("{} END", trxId);
+            throw se;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    /**
+     * Metodo que buscar certificados
+     *
+     * @param trxId             Identificacion de la transaccion (UUID)
+     * @return                  Boolean
+     * @throws ServiceException ServiceException
+     */
+    public List<ECertificadoDigital> buscarCertificado(Boolean expirado, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+        log.debug("{} expirado: {}", trxId, expirado);
+        try {
+
+//            List<ECertificadoDigital> listCert =  new ArrayList<>();
+//            for (ECertificadoDigital c: certRepo.findAll()){
+//                listCert.add(c);
+//            }
+
+            List<ECertificadoDigital> listcert= Lists.newArrayList(certRepo.findAll());
+            log.debug("{} Encontrados: {}", trxId,listcert!=null?listcert.size():0 );
+            log.debug("{} END", trxId);
+            return listcert;
         } catch (Exception e) {
             ServiceException se=ServiceException.assignException(e);
             log.error("{} {}", trxId, se.getErrorLog());
