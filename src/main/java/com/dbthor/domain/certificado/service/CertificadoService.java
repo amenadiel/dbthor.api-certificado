@@ -35,6 +35,7 @@ import java.util.stream.StreamSupport;
  */
 @Service
 @Log4j2
+@Transactional
 public class CertificadoService {
     private static final Logger logger = LogManager.getLogger(CertificadoService.class.getName());
 
@@ -364,8 +365,8 @@ public class CertificadoService {
             // Abre el certificado y extra la infomación basica
             cert.loadCertificado(certData.getDataEncode64Val(), "", password, trxId.toString());
 
-            log.debug("certificado: " +cert.getFechaExpiracion());
-            log.debug("certificado 1 : " +cert.getFechaExpiracion().after(new Date()));
+            log.trace("certificado: " +cert.getFechaExpiracion());
+            log.trace("certificado 1 : " +cert.getFechaExpiracion().after(new Date()));
 
             if (!cert.getFechaExpiracion().after(new Date())) {
                 throw new ServiceException(ServiceExceptionCodes.EXPIRADO);
