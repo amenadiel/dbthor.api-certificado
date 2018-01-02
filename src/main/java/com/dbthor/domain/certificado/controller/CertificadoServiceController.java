@@ -292,6 +292,52 @@ public class CertificadoServiceController {
         return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
     }
 
+
+     /*----------------------------------------------------------------------------------------------------------------*/
+    /**
+     * Cargar Certificado
+     *
+     * @param certificadoId  JSON con datos del certificado
+     * @param trxId     Identificación de la transacción
+     * @return          ECertificadoDigital
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/{certificadoId}/validar/error", produces = "application/json")
+    @ApiOperation(value = "Valida Certificado", notes = "Servicio que valida password y vigencia del certificado")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ServiceResponseType<ServiceExceptionCodes>> postCertificadoValidarError(
+            @ApiParam(value = "Identificado del certificado")            @PathVariable UUID certificadoId
+            , @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody String password
+            , @ApiParam(value = "Identificador de transacción")          @RequestParam(required = false) UUID trxId
+    ) {
+        if (trxId==null) trxId= UUID.randomUUID();
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
+                .postCertificadoValidar(certificadoId, password, trxId ));
+        ServiceResponseType<ServiceExceptionCodes> resp=  new ServiceResponseType<>(trxId);
+        try {
+            log.debug("{} START", trxId);
+            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
+            resp.add(link.withSelfRel());
+
+            if (password==null)
+                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO,"Se requeire password del certificado");
+            ServiceExceptionCodes respuesta;
+
+            respuesta = certSrv.verificaCertificadoConError(certificadoId, password, trxId);
+
+            resp.setDatos(respuesta);
+        } catch (Exception e) {
+            ServiceException se= ServiceException.assignException(e);
+            resp.addError(se);
+            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+        }
+
+        log.debug("{} END", trxId );
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.CREATED));
+    }
+
 }
 
 

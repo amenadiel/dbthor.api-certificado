@@ -85,6 +85,53 @@ public class CertificadoDigital {
     }
 
     /**
+     * Carga el certificado PFX/P12 y lo valida con contra sus password
+     *
+     * @param certificadoEncodeB64      certificado en formato encode B64
+     * @param password                  password del archivo
+     * @throws KeyStoreException        KeyStore Exception
+     * @throws IOException              IO Expception
+     * @throws CertificateException     Certificate Exception
+     * @throws NoSuchAlgorithmException NoSuchAlgorithm Exception
+     */
+    public void loadCertificadoError(String certificadoEncodeB64, String mail, String password, String trxId)
+            throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+        log.debug("{} START ", trxId );
+        log.debug("{} PARAM certData : {}", trxId,
+                (certificadoEncodeB64!=null && certificadoEncodeB64.length()>30?certificadoEncodeB64.substring(0,30):certificadoEncodeB64) );
+        log.debug("{} PARAM mail     : {}", trxId, mail );
+        log.debug("{} PARAM password : {}", trxId, password );
+
+        this.dataEncodeB64 =  certificadoEncodeB64;
+        this.password =  password;
+        this.mail =  mail;
+
+        byte[] data= decodeBase64Byte(certificadoEncodeB64);
+
+        InputStream stream = new ByteArrayInputStream(data);
+
+        ks = KeyStore.getInstance("PKCS12");
+        ks.load(stream, password.toCharArray());
+
+        alias = ks.aliases().nextElement();
+        X509Certificate cert = this.getX509Certificate(trxId);
+
+        fechaCreacion = cert.getNotBefore();
+        fechaExpiracion = cert.getNotAfter();
+        subject = cert.getSubjectDN().getName();
+        issuer = cert.getIssuerDN().getName();
+
+        log.debug("{} Datos del Certificado:", trxId );
+        log.debug("{}  - fechaCreacion  :{}", trxId,fechaCreacion );
+        log.debug("{}  - fechaExpiracion:{}", trxId,fechaExpiracion );
+        log.debug("{}  - subject        :{}", trxId,subject );
+        log.debug("{}  - issuer         :{}", trxId,issuer );
+
+        log.debug("{} END", trxId );
+
+    }
+
+    /**
      * Obtiene la llave privada del certificado
      *
      * @return Privatekey: objecto llave del certificado publica
