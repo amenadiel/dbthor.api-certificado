@@ -91,7 +91,7 @@ public class PersonaClienteService {
                     .replace("{tipo}", identTypeId.toString())
                     .replace("{identificador}", identVal));
 
-            url.addParameter("tipoIdentificacionId", (createNotExist?"true":"false"));
+            url.addParameter("crearSiNoExiste", (createNotExist?"true":"false"));
             url.addParameter("trxId", trxId.toString());
 
             log.debug("{} WS URL: {}", trxId, url.toString());
