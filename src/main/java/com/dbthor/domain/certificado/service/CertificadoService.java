@@ -24,9 +24,10 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Capa de servicio para el DTE
@@ -60,7 +61,7 @@ public class CertificadoService {
      * @throws ServiceException Exception de la aplicacion.
      */
     @Transactional
-    public ECertificadoDigital loadCertificado(CertificadoCreateRequest data, UUID trxId) throws ServiceException {
+    public ECertificadoDigital loadCertificado(CertificadoCreateRequest data, boolean guardarContrasenna, UUID trxId) throws ServiceException {
         Date now = new Date();
         ECertificadoDigital certificado = new ECertificadoDigital();
 
@@ -122,24 +123,22 @@ public class CertificadoService {
             certificado.setSubjectDnVal(cert.getSubject());
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
+            if (guardarContrasenna) {
+                certificado.setPasswordVal(password);
+            }
 
-            //certRepo.save(certificado);
+            certRepo.save(certificado);
 
-
-//            if (cert.getFechaExpiracion().after(now)) {
-//            if (!existCert) {
-                certRepo.save(certificado);
-
-                //Se genera los datos de la entidad Persona Certificado y su uso
-                if (!existCert) {
-                    EPersonaCertificadoDigital persUsoCert = new EPersonaCertificadoDigital();
-                    persUsoCert.setPersonaId(personaId);
-                    persUsoCert.setCertificadoDigitalId(certId.toString());
-                    persUsoCert.setTipoCertificadoUso(usoCert);
-                    personaCertRepo.save(persUsoCert);
-                }
-                // Se graba la informacion en la base de datos
-                logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
+            //Se genera los datos de la entidad Persona Certificado y su uso
+            if (!existCert) {
+                EPersonaCertificadoDigital persUsoCert = new EPersonaCertificadoDigital();
+                persUsoCert.setPersonaId(personaId);
+                persUsoCert.setCertificadoDigitalId(certId.toString());
+                persUsoCert.setTipoCertificadoUso(usoCert);
+                personaCertRepo.save(persUsoCert);
+            }
+            // Se graba la informacion en la base de datos
+            logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
 
 //            } else {
 //                certRepo.save(certificado);

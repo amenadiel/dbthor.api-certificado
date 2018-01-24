@@ -26,7 +26,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 /**
  * Controlador de servicio RestFull para el certificado
- *
+ * <p>
  * Created by CSATTLER on 31-01-2017.
  */
 @Api
@@ -35,41 +35,45 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @Log4j2
 @SuppressWarnings("unused,WeakerAccess")
 public class CertificadoServiceController {
-    static final String BASE_URI="/certificado";
+    static final String BASE_URI = "/certificado";
 
-    @Autowired private CertificadoService certSrv;
-    @Autowired private DteSiiService dteSiiSrv;
+    @Autowired
+    private CertificadoService certSrv;
+    @Autowired
+    private DteSiiService dteSiiSrv;
 
     /*----------------------------------------------------------------------------------------------------------------*/
+
     /**
      * Cargar Certificado
      *
-     * @param bodyData  JSON con datos del certificado
-     * @param trxId     Identificación de la transacción
-     * @return          ECertificadoDigital
+     * @param bodyData JSON con datos del certificado
+     * @param trxId    Identificación de la transacción
+     * @return ECertificadoDigital
      */
     @RequestMapping(method = RequestMethod.POST, value = "", produces = "application/json")
     @ApiOperation(value = "Cargar Certificado", notes = "Servicio que carga un certificado a una persona")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<ECertificadoDigital>> postCertificado(
+            @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(defaultValue = "false") boolean guardarContrasenna,
             @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody CertificadoCreateRequest bodyData
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(bodyData, trxId ));
-        ServiceResponseType<ECertificadoDigital> resp=  new ServiceResponseType<>(trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(guardarContrasenna, bodyData, trxId));
+        ServiceResponseType<ECertificadoDigital> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             resp.add(link.withSelfRel());
 
-            if (bodyData==null)
+            if (bodyData == null)
                 throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO);
 
-            ECertificadoDigital cert = certSrv.loadCertificado(bodyData, trxId);
+            ECertificadoDigital cert = certSrv.loadCertificado(bodyData, guardarContrasenna, trxId);
 
-            if (cert!= null) {
+            if (cert != null) {
                 String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
 
                 if (token == null)
@@ -78,39 +82,40 @@ public class CertificadoServiceController {
 
             resp.setDatos(cert);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
 
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.CREATED));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
 
     /*----------------------------------------------------------------------------------------------------------------*/
+
     /**
      * Obtiene el certificado
      *
      * @param certificadoId Identificado del certificado
-     * @param trxId     Identificación de la transacción
-     * @return              CertificadoResponse con los datos del certificado
+     * @param trxId         Identificación de la transacción
+     * @return CertificadoResponse con los datos del certificado
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{certificadoId}", produces = "application/json")
     @ApiOperation(value = "Obtiene datos de un Certificado", notes = "Servicio que obtiene datos de un Certificado")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ServiceResponseType<ECertificadoDigital>> getCertificado(
-            @ApiParam(value = "Identificado del certificado")   @PathVariable UUID certificadoId
+            @ApiParam(value = "Identificado del certificado") @PathVariable UUID certificadoId
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).getCertificado(certificadoId, trxId ));
-        ServiceResponseType<ECertificadoDigital> resp=  new ServiceResponseType<>(trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).getCertificado(certificadoId, trxId));
+        ServiceResponseType<ECertificadoDigital> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             log.debug("{} PARAM certificadoId: {}", trxId, certificadoId);
             resp.add(link.withSelfRel());
 
@@ -118,40 +123,41 @@ public class CertificadoServiceController {
 
             resp.setDatos(cert);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.OK));
     }
 
 
     /*----------------------------------------------------------------------------------------------------------------*/
+
     /**
      * Obtiene el certificado asociado a una persona
      *
      * @param personaId Identificados Internos de la Persona
      * @param usoId     Tipo de Uso de Certificado
-     * @return          List<ECertificadoDigital> Listados de certificados
+     * @return List<ECertificadoDigital> Listados de certificados
      */
     @RequestMapping(method = RequestMethod.GET, value = "/persona/{personaId}", produces = "application/json")
     @ApiOperation(value = "Obtiene el certificado asociado a una persona",
             notes = "Servicio que oObtiene el certificado asociado a una persona")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ServiceResponseType<List<ECertificadoDigital>>> getCertificadoPersonaUso(
-            @ApiParam(value = "Identificado de la persona")     @PathVariable UUID personaId
-            , @ApiParam(value = "Identificado de la persona")   @RequestParam(value = "usoId" , required = false) String usoId
+            @ApiParam(value = "Identificado de la persona") @PathVariable UUID personaId
+            , @ApiParam(value = "Identificado de la persona") @RequestParam(value = "usoId", required = false) String usoId
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).getCertificadoPersonaUso(personaId,usoId,trxId ));
-        ServiceResponseType<List<ECertificadoDigital>> resp=  new ServiceResponseType<>(trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).getCertificadoPersonaUso(personaId, usoId, trxId));
+        ServiceResponseType<List<ECertificadoDigital>> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             log.debug("{} PARAM personaId: {}", trxId, personaId);
             log.debug("{} PARAM usoId:     {}", trxId, usoId);
             resp.add(link.withSelfRel());
@@ -160,106 +166,106 @@ public class CertificadoServiceController {
 
             resp.setDatos(listCert);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.OK));
     }
 
 
     /*----------------------------------------------------------------------------------------------------------------*/
+
     /**
      * Cargar Certificado
      *
-     * @param certificadoId  JSON con datos del certificado
-     * @param trxId     Identificación de la transacción
-     * @return          ECertificadoDigital
+     * @param certificadoId JSON con datos del certificado
+     * @param trxId         Identificación de la transacción
+     * @return ECertificadoDigital
      */
     @RequestMapping(method = RequestMethod.POST, value = "/{certificadoId}/validar", produces = "application/json")
     @ApiOperation(value = "Valida Certificado", notes = "Servicio que valida password y vigencia del certificado")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<Boolean>> postCertificadoValidar(
-            @ApiParam(value = "Identificado del certificado")            @PathVariable UUID certificadoId
+            @ApiParam(value = "Identificado del certificado") @PathVariable UUID certificadoId
             , @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody String password
-            , @ApiParam(value = "Identificador de transacción")          @RequestParam(required = false) UUID trxId
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
         ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
-                .postCertificadoValidar(certificadoId, password, trxId ));
-        ServiceResponseType<Boolean> resp=  new ServiceResponseType<>(trxId);
+                .postCertificadoValidar(certificadoId, password, trxId));
+        ServiceResponseType<Boolean> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
             resp.add(link.withSelfRel());
 
-            if (password==null)
-                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO,"Se requeire password del certificado");
+            if (password == null)
+                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO, "Se requeire password del certificado");
 
-            Boolean valido= certSrv.verificaCertificado(certificadoId, password, trxId);
+            Boolean valido = certSrv.verificaCertificado(certificadoId, password, trxId);
 
             resp.setDatos(valido);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
 
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.CREATED));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
     /**
      * Elimina un Certificado
      *
-     * @param certificadoId     Identificacion del certificado
-     * @param trxId             Identificación de la transacción
-     * @return                  Booelan
+     * @param certificadoId Identificacion del certificado
+     * @param trxId         Identificación de la transacción
+     * @return Booelan
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{certificadoId}", produces = "application/json")
     @ApiOperation(value = "Elimina un Certificado", notes = "Servicio que elimina un certificado")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ServiceResponseType<Boolean>> delCertificado(
-            @ApiParam(value = "Identificado del certificado")            @PathVariable UUID certificadoId
-            , @ApiParam(value = "Identificador de transacción")          @RequestParam(required = false) UUID trxId
+            @ApiParam(value = "Identificado del certificado") @PathVariable UUID certificadoId
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
         ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
-                .delCertificado(certificadoId,trxId ));
-        ServiceResponseType<Boolean> resp=  new ServiceResponseType<>(trxId);
+                .delCertificado(certificadoId, trxId));
+        ServiceResponseType<Boolean> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
             resp.add(link.withSelfRel());
 
-            Boolean valido= certSrv.delCertificado(certificadoId, trxId);
+            Boolean valido = certSrv.delCertificado(certificadoId, trxId);
 
             resp.setDatos(valido);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
 
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.OK));
     }
-
 
 
     /**
      * Busca Certificados
      *
-     * @param trxId             Identificación de la transacción
-     * @return                  Booelan
+     * @param trxId Identificación de la transacción
+     * @return Booelan
      */
     @RequestMapping(method = RequestMethod.GET, value = "/", produces = "application/json")
     @ApiOperation(value = "Busca certificados", notes = "Servicio que busca certificados")
@@ -268,74 +274,75 @@ public class CertificadoServiceController {
             @ApiParam(value = "Certificado Expirado") @RequestParam(required = false) Boolean expirado
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
         ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
-                .buscarCertificado(expirado, trxId ));
-        ServiceResponseType<List<ECertificadoDigital>> resp=  new ServiceResponseType<>(trxId);
+                .buscarCertificado(expirado, trxId));
+        ServiceResponseType<List<ECertificadoDigital>> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             resp.add(link.withSelfRel());
 
-            List<ECertificadoDigital>  listCert= certSrv.buscarCertificado(expirado, trxId);
+            List<ECertificadoDigital> listCert = certSrv.buscarCertificado(expirado, trxId);
 
             resp.setDatos(listCert);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
 
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.OK));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.OK));
     }
 
 
      /*----------------------------------------------------------------------------------------------------------------*/
+
     /**
      * Cargar Certificado
      *
-     * @param certificadoId  JSON con datos del certificado
-     * @param trxId     Identificación de la transacción
-     * @return          ECertificadoDigital
+     * @param certificadoId JSON con datos del certificado
+     * @param trxId         Identificación de la transacción
+     * @return ECertificadoDigital
      */
     @RequestMapping(method = RequestMethod.POST, value = "/{certificadoId}/validar/error", produces = "application/json")
     @ApiOperation(value = "Valida Certificado", notes = "Servicio que valida password y vigencia del certificado")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<ServiceExceptionCodes>> postCertificadoValidarError(
-            @ApiParam(value = "Identificado del certificado")            @PathVariable UUID certificadoId
+            @ApiParam(value = "Identificado del certificado") @PathVariable UUID certificadoId
             , @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody String password
-            , @ApiParam(value = "Identificador de transacción")          @RequestParam(required = false) UUID trxId
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
-        if (trxId==null) trxId= UUID.randomUUID();
+        if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
         ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
-                .postCertificadoValidar(certificadoId, password, trxId ));
-        ServiceResponseType<ServiceExceptionCodes> resp=  new ServiceResponseType<>(trxId);
+                .postCertificadoValidar(certificadoId, password, trxId));
+        ServiceResponseType<ServiceExceptionCodes> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
-            log.debug("{} POST  {}", trxId, link.toUri().toString() );
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
             log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
             resp.add(link.withSelfRel());
 
-            if (password==null)
-                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO,"Se requeire password del certificado");
+            if (password == null)
+                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO, "Se requeire password del certificado");
             ServiceExceptionCodes respuesta;
 
             respuesta = certSrv.verificaCertificadoConError(certificadoId, password, trxId);
 
             resp.setDatos(respuesta);
         } catch (Exception e) {
-            ServiceException se= ServiceException.assignException(e);
+            ServiceException se = ServiceException.assignException(e);
             resp.addError(se);
             log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
         }
 
-        log.debug("{} END", trxId );
+        log.debug("{} END", trxId);
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(),  HttpStatus.CREATED));
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
 }
