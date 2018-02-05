@@ -22,6 +22,8 @@ public class ECertificadoDigital {
     private String subjectDnVal;
     private String issuerDnVal;
     private Timestamp regCreacionFchhr = DateTools.convertUtil2SqlTimestamp(new Date());
+    private Long clienteVal;
+
 
     @Id
     @Column(name = "id", nullable = false, length = 36)
@@ -124,6 +126,17 @@ public class ECertificadoDigital {
         this.regCreacionFchhr = regCreacionFchhr;
     }
 
+    @Basic
+    @Column(name = "cliente_val", nullable = false)
+    public Long getClienteVal() {
+        return clienteVal;
+    }
+
+    public void setClienteVal(Long clienteVal) {
+        this.clienteVal = clienteVal;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -153,4 +166,6 @@ public class ECertificadoDigital {
         result = 31 * result + (regCreacionFchhr != null ? regCreacionFchhr.hashCode() : 0);
         return result;
     }
+
+
 }
