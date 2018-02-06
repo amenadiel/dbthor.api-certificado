@@ -8,7 +8,7 @@
         <datasource-mapping>
           <factory-entry name="CertificadoPersistenceUnit" value="82f2b00a-5b49-4965-9fc6-736f1172efc6" />
           <factory-entry name="DTEPersistenceUnit" value="2a7706a9-1486-43f2-a6ce-c58bd4031a4c" />
-          <factory-entry name="DocumentoPersistenceUnit" />
+          <factory-entry name="DocumentoPersistenceUnit" value="a31596a7-60c3-440d-889c-0408a80d3a37" />
           <factory-entry name="FactoringDBPersistenceUnit" value="c1535e09-6968-4db7-8b30-70472348faad" />
           <factory-entry name="PersonaPersistenceUnit" value="aaf47bb9-d4cc-4cd9-8661-9410547e8a5f" />
           <factory-entry name="entityManagerFactory" />

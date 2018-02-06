@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dataSource name="dbthorecapitaluff@localhost">
-  <database-model serializer="dbm" rdbms="MYSQL" format-version="4.0">
+  <database-model serializer="dbm" rdbms="MYSQL" format-version="4.4">
     <root id="1"/>
     <schema id="2" parent="1" name="dbthorecapitaluff">
       <Current>1</Current>
@@ -370,9 +370,7 @@
     <table id="364" parent="2" name="sis_cargosfijos"/>
     <table id="365" parent="2" name="sis_centrocosto"/>
     <table id="366" parent="2" name="sis_clientecomision"/>
-    <table id="367" parent="2" name="sis_clienteempresa">
-      <Comment> </Comment>
-    </table>
+    <table id="367" parent="2" name="sis_clienteempresa"/>
     <table id="368" parent="2" name="sis_clientepdf"/>
     <table id="369" parent="2" name="sis_clientevaloresdecargo"/>
     <table id="370" parent="2" name="sis_cobranzaexterna"/>

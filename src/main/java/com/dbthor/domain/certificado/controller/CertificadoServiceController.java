@@ -56,12 +56,13 @@ public class CertificadoServiceController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<ECertificadoDigital>> postCertificado(
             @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(defaultValue = "false") boolean guardarContrasenna,
+            @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(required = false) String usuario,
             @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody CertificadoCreateRequest bodyData
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
         if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(guardarContrasenna, bodyData, trxId));
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(guardarContrasenna,usuario, bodyData, trxId));
         ServiceResponseType<ECertificadoDigital> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
@@ -75,7 +76,7 @@ public class CertificadoServiceController {
 
             if (cert != null) {
                 String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
-
+                certSrv.guardarCertificadoLog(cert,usuario, trxId);
                 if (token == null)
                     throw new ServiceException(ServiceExceptionCodes.INVALIDO);
             }

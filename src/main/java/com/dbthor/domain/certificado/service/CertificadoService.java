@@ -1,10 +1,7 @@
 package com.dbthor.domain.certificado.service;
 
 
-import com.dbthor.domain.certificado.data.ICertificadoDigitalRepository;
-import com.dbthor.domain.certificado.data.ICertificadoDigitalTokenRepository;
-import com.dbthor.domain.certificado.data.IPersonaCertificadoDigitalRepository;
-import com.dbthor.domain.certificado.data.ITipoCertificadoUsoRepository;
+import com.dbthor.domain.certificado.data.*;
 import com.dbthor.domain.certificado.data.entity.*;
 import com.dbthor.domain.certificado.entity.CertificadoCreateRequest;
 import com.dbthor.domain.certificado.entity.CertificadoDigital;
@@ -24,6 +21,7 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +40,8 @@ public class CertificadoService {
     @Autowired
     private ICertificadoDigitalRepository certRepo;
     @Autowired
+    private ICertificadoDigitalHistoricoRepository certificadoDigitalHistoricoRepository;
+    @Autowired
     private ITipoCertificadoUsoRepository tipoUsoCertRepo;
     @Autowired
     private IPersonaCertificadoDigitalRepository personaCertRepo;
@@ -51,6 +51,8 @@ public class CertificadoService {
     private ICertificadoDigitalTokenRepository certTokenRepo;
     @Autowired
     private DteSiiService dteSiiSrv;
+    @Autowired
+    private ICertificadoLogRepository iCertificadoLogRepository;
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -128,7 +130,10 @@ public class CertificadoService {
                 certificado.setPasswordVal(password);
             }
 
+
             certRepo.save(certificado);
+            logger.info("{} Cargar certificado Historico", trxId);
+            guardarCertificadoDigitalHistorico(certificado, trxId);
 
             //Se genera los datos de la entidad Persona Certificado y su uso
             if (!existCert) {
@@ -158,6 +163,49 @@ public class CertificadoService {
         }
 
         return certificado;
+    }
+
+    public void guardarCertificadoDigitalHistorico(
+            ECertificadoDigital certificado,
+            UUID trxId) {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certId : {}", trxId, certificado.getId());
+        //guardarCertificadoLog
+        ECertificadoDigitalHistorico certificadoDigitalHistorico = new ECertificadoDigitalHistorico();
+        certificadoDigitalHistorico.setArchivoNombre(certificado.getArchivoNombre());
+        certificadoDigitalHistorico.setDataEncode64Val(certificado.getDataEncode64Val());
+        certificadoDigitalHistorico.setClienteVal(certificado.getClienteVal());
+        certificadoDigitalHistorico.setCreacionFchhr(certificado.getCreacionFchhr());
+        certificadoDigitalHistorico.setExpiracionFchhr(certificado.getExpiracionFchhr());
+        certificadoDigitalHistorico.setId(certificado.getId());
+        certificadoDigitalHistorico.setIssuerDnVal(certificado.getIssuerDnVal());
+        certificadoDigitalHistorico.setPasswordVal(certificado.getPasswordVal());
+        certificadoDigitalHistorico.setRegCreacionFchhr(certificado.getRegCreacionFchhr());
+        certificadoDigitalHistorico.setUsuarioCorreoVal(certificado.getUsuarioCorreoVal());
+        certificadoDigitalHistorico.setSubjectDnVal(certificado.getSubjectDnVal());
+        certificadoDigitalHistoricoRepository.save(certificadoDigitalHistorico);
+        log.debug("{} END", trxId);
+    }
+
+    public void guardarCertificadoLog(
+            ECertificadoDigital certificado,
+            String usuario,
+            UUID trxId) {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certId : {}", trxId, certificado.getId());
+        log.debug("{} PARAM usuario : {}", trxId, usuario);
+
+        ECertificadoLog certificadoLog = new ECertificadoLog();
+        certificadoLog.setCertificadoId(certificado.getId());
+        certificadoLog.setUsuario(usuario);
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        certificadoLog.setRegModificacionFchhr(now);
+/*        ECertificadoLogPK certificadoLogPK = new ECertificadoLogPK();
+        certificadoLogPK.setRegModificacionFchhr(now);
+        certificadoLogPK.setCertificadoId(certificado.getId()); */
+        iCertificadoLogRepository.save(certificadoLog);
+        log.debug("{} END", trxId);
+
     }
 
     //------------------------------------------------------------------------------------------------------------------
