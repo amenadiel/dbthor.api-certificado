@@ -56,7 +56,7 @@ public class CertificadoServiceController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<ECertificadoDigital>> postCertificado(
             @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(defaultValue = "false") boolean guardarContrasenna,
-            @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(required = false) String usuario,
+            @ApiParam(value = "Indicador del usuario que esta ingresando el certificado") @RequestParam(required = false,defaultValue ="") String usuario,
             @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody CertificadoCreateRequest bodyData
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {

@@ -135,6 +135,7 @@ public class CertificadoService {
             logger.info("{} Cargar certificado Historico", trxId);
             guardarCertificadoDigitalHistorico(certificado, trxId);
 
+
             //Se genera los datos de la entidad Persona Certificado y su uso
             if (!existCert) {
                 EPersonaCertificadoDigital persUsoCert = new EPersonaCertificadoDigital();
@@ -142,6 +143,7 @@ public class CertificadoService {
                 persUsoCert.setCertificadoDigitalId(certId.toString());
                 persUsoCert.setTipoCertificadoUso(usoCert);
                 personaCertRepo.save(persUsoCert);
+
             }
             // Se graba la informacion en la base de datos
             logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
