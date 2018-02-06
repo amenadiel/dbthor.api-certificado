@@ -75,8 +75,8 @@ public class CertificadoServiceController {
             ECertificadoDigital cert = certSrv.loadCertificado(bodyData, guardarContrasenna, trxId);
 
             if (cert != null) {
-                String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
                 certSrv.guardarCertificadoLog(cert,usuario, trxId);
+                String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
                 if (token == null)
                     throw new ServiceException(ServiceExceptionCodes.INVALIDO);
             }
