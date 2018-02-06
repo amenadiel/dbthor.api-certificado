@@ -22,7 +22,7 @@ public class ECertificadoDigital {
     private String subjectDnVal;
     private String issuerDnVal;
     private Timestamp regCreacionFchhr = DateTools.convertUtil2SqlTimestamp(new Date());
-    private Long clienteVal;
+    private Long certRut;
 
 
     @Id
@@ -127,13 +127,13 @@ public class ECertificadoDigital {
     }
 
     @Basic
-    @Column(name = "cliente_val", nullable = false)
-    public Long getClienteVal() {
-        return clienteVal;
+    @Column(name = "cert_rut", nullable = false)
+    public Long getCertRut() {
+        return certRut;
     }
 
-    public void setClienteVal(Long clienteVal) {
-        this.clienteVal = clienteVal;
+    public void setCertRut(Long clienteVal) {
+        this.certRut = clienteVal;
     }
 
 

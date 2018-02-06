@@ -20,7 +20,7 @@ public class ECertificadoDigitalHistorico {
     private String subjectDnVal;
     private String issuerDnVal;
     private Timestamp regCreacionFchhr = DateTools.convertUtil2SqlTimestamp(new Date());
-    private Long clienteVal;
+    private Long certRut;
 
     @Id
     @Column(name = "id")
@@ -123,13 +123,13 @@ public class ECertificadoDigitalHistorico {
     }
 
     @Basic
-    @Column(name = "cliente_val")
-    public Long getClienteVal() {
-        return clienteVal;
+    @Column(name = "cert_rut")
+    public Long getCertRut() {
+        return certRut;
     }
 
-    public void setClienteVal(Long clienteVal) {
-        this.clienteVal = clienteVal;
+    public void setCertRut(Long clienteVal) {
+        this.certRut = clienteVal;
     }
 
     @Override
@@ -155,7 +155,7 @@ public class ECertificadoDigitalHistorico {
         if (issuerDnVal != null ? !issuerDnVal.equals(that.issuerDnVal) : that.issuerDnVal != null) return false;
         if (regCreacionFchhr != null ? !regCreacionFchhr.equals(that.regCreacionFchhr) : that.regCreacionFchhr != null)
             return false;
-        if (clienteVal != null ? !clienteVal.equals(that.clienteVal) : that.clienteVal != null) return false;
+        if (certRut != null ? !certRut.equals(that.certRut) : that.certRut != null) return false;
 
         return true;
     }
@@ -172,7 +172,7 @@ public class ECertificadoDigitalHistorico {
         result = 31 * result + (subjectDnVal != null ? subjectDnVal.hashCode() : 0);
         result = 31 * result + (issuerDnVal != null ? issuerDnVal.hashCode() : 0);
         result = 31 * result + (regCreacionFchhr != null ? regCreacionFchhr.hashCode() : 0);
-        result = 31 * result + (clienteVal != null ? clienteVal.hashCode() : 0);
+        result = 31 * result + (certRut != null ? certRut.hashCode() : 0);
         return result;
     }
 }

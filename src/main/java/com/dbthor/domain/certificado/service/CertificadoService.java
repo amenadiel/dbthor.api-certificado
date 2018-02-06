@@ -125,7 +125,7 @@ public class CertificadoService {
             certificado.setSubjectDnVal(cert.getSubject());
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
-            certificado.setClienteVal(data.getCliente().getClienteVal());
+            certificado.setCertRut(data.getCliente().getClienteVal());
             if (guardarContrasenna) {
                 certificado.setPasswordVal(password);
             }
@@ -176,7 +176,7 @@ public class CertificadoService {
         ECertificadoDigitalHistorico certificadoDigitalHistorico = new ECertificadoDigitalHistorico();
         certificadoDigitalHistorico.setArchivoNombre(certificado.getArchivoNombre());
         certificadoDigitalHistorico.setDataEncode64Val(certificado.getDataEncode64Val());
-        certificadoDigitalHistorico.setClienteVal(certificado.getClienteVal());
+        certificadoDigitalHistorico.setCertRut(certificado.getCertRut());
         certificadoDigitalHistorico.setCreacionFchhr(certificado.getCreacionFchhr());
         certificadoDigitalHistorico.setExpiracionFchhr(certificado.getExpiracionFchhr());
         certificadoDigitalHistorico.setId(certificado.getId());
