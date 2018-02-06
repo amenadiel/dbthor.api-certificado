@@ -125,7 +125,7 @@ public class CertificadoService {
             certificado.setSubjectDnVal(cert.getSubject());
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
-            certificado.setCertRut(data.getCliente().getClienteVal());
+            certificado.setCertRut(data.getCertificado().getCertRut());
             if (guardarContrasenna) {
                 certificado.setPasswordVal(password);
             }

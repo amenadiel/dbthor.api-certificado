@@ -52,7 +52,7 @@
                 <spring.datasource.username>root</spring.datasource.username>
                 <spring.datasource.password>dbt2016</spring.datasource.password>
                 <!--Base de datos esquemas -->
-                <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
+                    <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
 
                 <url.srv.base>http://10.10.100.210:8080</url.srv.base>
                 <url.srv.persona.path>/api-persona</url.srv.persona.path>
