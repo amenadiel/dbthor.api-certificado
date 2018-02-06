@@ -14,7 +14,6 @@ public class CertificadoCreateRequest {
         @Setter @Getter @JsonProperty("tipoIdentificadorId") Short tipoIdentificadorId;
         @Setter @Getter @JsonProperty("identificador") String identificador;
         @Setter @Getter @JsonProperty("validador") String validador;
-        @Setter @Getter @JsonProperty("clienteVal") long clienteVal;
 
         public ClienteIdent() { }
     }
@@ -25,6 +24,7 @@ public class CertificadoCreateRequest {
         @Setter @Getter @JsonProperty("password") public String password;
         @Setter @Getter @JsonProperty("userEMail") public String userEmail;
         @Setter @Getter @JsonProperty("archivoNombre") public String archivoNombre;
+        @Setter @Getter @JsonProperty("certRut") long certRut;
 
         public Certificado() {}
     }
