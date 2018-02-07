@@ -37,6 +37,7 @@ public enum ServiceExceptionCodes {
     INDENTIFICADOR_INVALIDO("INDENTIFICADOR_INVALIDO","Identificador invalido"),
     INDENTIFICADOR_DUPLICADO("INDENTIFICADOR_DUPLICADO","Identificador Duplicado."),
     VALIDADOR_IDENTIFICADOR_INVALIDO("VALIDADOR_IDENTIFICADOR_INVALIDO", "Digito validador del RUT invalido"),
+    CERT_NO_FIND("CERT_NO_FIND", "certificado no encontrado"),
 
 
     //Codigos de Error de PERSONA_APLICACION

@@ -434,6 +434,31 @@ public class CertificadoService {
         }
     }
 
+    public int guardarCertificadoPass(UUID certificadoId, String password, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certificadoId: {}", trxId, certificadoId);
+        log.trace("{} PARAM password     : {}", trxId, password);
+        try {
+            ECertificadoDigital cert = certRepo.findOne(certificadoId.toString());
+            //validar q cert no nullo
+            if (cert == null) {
+                throw new ServiceException(ServiceExceptionCodes.CERT_NO_FIND);
+            }
+            if (cert.getPasswordVal() != null && cert.getPasswordVal().length() > 0) {
+                return 2;
+            }
+
+            cert.setPasswordVal(password);
+            certRepo.save(cert);
+            return 1;
+        } catch (Exception e) {
+            ServiceException sex = ServiceException.assignException(e);
+            log.debug("{} END", trxId);
+            throw sex;
+        }
+//        return 0;
+    }
+
 
     //------------------------------------------------------------------------------------------------------------------
 
