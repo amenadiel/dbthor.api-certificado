@@ -3,6 +3,7 @@ package com.dbthor.domain.certificado.entity;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
 import com.dbthor.tools.ErrorTools;
+import com.dbthor.tools.JsonTools;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -118,7 +119,7 @@ public class ServiceResponseType<T> extends ResourceSupport {
      * @return
      */
     public static ServiceResponseType getfromJson(String json) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = JsonTools.getObjectMapperOmit();
         objectMapper.registerModule(new Jackson2HalModule());
         try {
             return objectMapper.readValue(json, ServiceResponseType.class);

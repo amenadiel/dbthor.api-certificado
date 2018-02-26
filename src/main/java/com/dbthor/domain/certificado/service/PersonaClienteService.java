@@ -5,6 +5,7 @@ import com.dbthor.domain.certificado.entity.RestCall;
 import com.dbthor.domain.certificado.entity.persona.EIdentificacion;
 import com.dbthor.domain.certificado.entity.persona.EPersona;
 import com.dbthor.domain.certificado.exception.ServiceException;
+import com.dbthor.tools.JsonTools;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 /**
  * Servicio Cliente del Dominio Persona
- *
+ * <p>
  * Created by chris on 19-06-2017.
  */
 @SuppressWarnings("unused")
@@ -25,25 +26,29 @@ import java.util.UUID;
 @Log4j2
 public class PersonaClienteService {
 
-    @Value("${url.srv.persona.get}")                private String getPersonaUrl;
-    @Value("${url.srv.persona.ident.buscar.get}")   private String getIdentBuscarUrl;
-    @Value("${url.srv.persona.buscar.get}")         private String getPersonaByIdentUrl;
+    @Value("${url.srv.persona.get}")
+    private String getPersonaUrl;
+    @Value("${url.srv.persona.ident.buscar.get}")
+    private String getIdentBuscarUrl;
+    @Value("${url.srv.persona.buscar.get}")
+    private String getPersonaByIdentUrl;
 
     //------------------------------------------------------------------------------------------------------------------
+
     /**
      * Servicio que obtiene el identificador de una persona. Se busca por personaId y tipo identificador
      *
-     * @param personaId             Identificacion persona (UUID)
-     * @param tipoIdent             Tipo de Identificador
-     * @param trxId                 Identificacion de Transaccion (UUID)
-     * @return                      EIdentificacion
-     * @throws ServiceException     ServiceException
+     * @param personaId Identificacion persona (UUID)
+     * @param tipoIdent Tipo de Identificador
+     * @param trxId     Identificacion de Transaccion (UUID)
+     * @return EIdentificacion
+     * @throws ServiceException ServiceException
      */
     public EIdentificacion getIdentificacion(UUID personaId, Integer tipoIdent, UUID trxId) throws ServiceException {
         log.debug("{} START", trxId);
         log.debug("{} PARAM personaId : {}", trxId, personaId);
 
-        RestCall<EIdentificacion> restCall =  new RestCall<>();
+        RestCall<EIdentificacion> restCall = new RestCall<>();
         try {
             URIBuilder url = new URIBuilder();
             url.setPath(getIdentBuscarUrl);
@@ -53,14 +58,16 @@ public class PersonaClienteService {
 
             log.debug("{} WS URL: {}", trxId, url.toString());
 
-            String jsonResponse = restCall.callGet(url,trxId);
+            String jsonResponse = restCall.callGet(url, trxId);
 
-            EIdentificacion response = (new ObjectMapper()).readValue(jsonResponse, new TypeReference<EIdentificacion>() {});
+            EIdentificacion response = (JsonTools.getObjectMapperOmit()).
+                    readValue(jsonResponse, new TypeReference<EIdentificacion>() {
+                    });
 
             log.debug("{} END", trxId);
             return response;
         } catch (Exception e) {
-            ServiceException fex=ServiceException.assignException(e);
+            ServiceException fex = ServiceException.assignException(e);
             log.error("{} {}", trxId, fex.getErrorLog());
             log.debug("{} END", trxId);
             throw fex;
@@ -68,15 +75,16 @@ public class PersonaClienteService {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     /**
      * Busca una persona segun su identificador, si no existe la crea (solo si createNotExist = true)
      *
-     * @param identTypeId           Tipo de identificador
-     * @param identVal              Valor Identificador
-     * @param createNotExist        Crear persona si no existe (true)
-     * @param trxId                 Identificacion de Transaccion (UUID)
-     * @return                      EPersona
-     * @throws ServiceException    ContratoException
+     * @param identTypeId    Tipo de identificador
+     * @param identVal       Valor Identificador
+     * @param createNotExist Crear persona si no existe (true)
+     * @param trxId          Identificacion de Transaccion (UUID)
+     * @return EPersona
+     * @throws ServiceException ContratoException
      */
     public EPersona getPersonaByIdent(Short identTypeId, String identVal, Boolean createNotExist, UUID trxId) throws ServiceException {
         log.debug("{} START", trxId);
@@ -84,26 +92,28 @@ public class PersonaClienteService {
         log.debug("{} PARAM identVal:       {}", trxId, identVal);
         log.debug("{} PARAM createNotExist: {}", trxId, createNotExist);
 
-        RestCall<EPersona> restCall =  new RestCall<>();
+        RestCall<EPersona> restCall = new RestCall<>();
         try {
             URIBuilder url = new URIBuilder();
             url.setPath(getPersonaByIdentUrl
                     .replace("{tipo}", identTypeId.toString())
                     .replace("{identificador}", identVal));
 
-            url.addParameter("crearSiNoExiste", (createNotExist?"true":"false"));
+            url.addParameter("crearSiNoExiste", (createNotExist ? "true" : "false"));
             url.addParameter("trxId", trxId.toString());
 
             log.debug("{} WS URL: {}", trxId, url.toString());
 
-            String jsonResponse = restCall.callGet(url,trxId);
+            String jsonResponse = restCall.callGet(url, trxId);
 
-            EPersona response = (new ObjectMapper()).readValue(jsonResponse, new TypeReference<EPersona>() {});
+
+            EPersona response = (JsonTools.getObjectMapperOmit()).readValue(jsonResponse, new TypeReference<EPersona>() {
+            });
 
             log.debug("{} END", trxId);
             return response;
         } catch (Exception e) {
-            ServiceException fex=ServiceException.assignException(e);
+            ServiceException fex = ServiceException.assignException(e);
             log.error("{} {}", trxId, fex.getErrorLog());
             log.debug("{} END", trxId);
             throw fex;
@@ -111,13 +121,14 @@ public class PersonaClienteService {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     /**
      * Servicio que obtene lso das base de una persona
      *
-     * @param personId              Identificacion de la persona (UUID)
-     * @param trxId                 Identificacion de la transaccion (UUID)
-     * @return                      EPersona
-     * @throws ServiceException    ServiceException
+     * @param personId Identificacion de la persona (UUID)
+     * @param trxId    Identificacion de la transaccion (UUID)
+     * @return EPersona
+     * @throws ServiceException ServiceException
      */
     public EPersona getPersona(UUID personId, UUID trxId) throws ServiceException {
         log.debug("{} START", trxId);
@@ -133,11 +144,12 @@ public class PersonaClienteService {
             log.debug("{} WS URL: {}", trxId, url.toString());
             String jsonResponse = restCall.callGet(url, trxId);
 
-            ObjectMapper objectMapper =  new ObjectMapper();
+            ObjectMapper objectMapper = JsonTools.getObjectMapperOmit();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
 
-            EPersona response = objectMapper.readValue(jsonResponse, new TypeReference<EPersona>() {});
+            EPersona response = objectMapper.readValue(jsonResponse, new TypeReference<EPersona>() {
+            });
 
 
             log.debug("{} END", trxId);

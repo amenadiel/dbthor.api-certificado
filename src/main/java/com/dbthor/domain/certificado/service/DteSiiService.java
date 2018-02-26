@@ -3,6 +3,7 @@ package com.dbthor.domain.certificado.service;
 import com.dbthor.domain.certificado.entity.RestCall;
 import com.dbthor.domain.certificado.entity.persona.EIdentificacion;
 import com.dbthor.domain.certificado.exception.ServiceException;
+import com.dbthor.tools.JsonTools;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +36,7 @@ public class DteSiiService {
 
             String jsonResponse = restCall.callGet(url,trxId);
 
-            ObjectMapper objectMapper =  new ObjectMapper();
+            ObjectMapper objectMapper =  JsonTools.getObjectMapperOmit();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
 
