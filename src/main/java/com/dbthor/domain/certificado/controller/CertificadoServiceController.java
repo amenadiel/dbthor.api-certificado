@@ -5,6 +5,9 @@ import com.dbthor.domain.certificado.entity.CertificadoCreateRequest;
 import com.dbthor.domain.certificado.entity.ServiceResponseType;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
+import com.dbthor.domain.certificado.request.ValidarCertificadoRequest;
+import com.dbthor.domain.certificado.response.CargarCertificado.CargarCertificadoResponse;
+import com.dbthor.domain.certificado.response.ValidarCertificado.ValidarCertificadoResponse;
 import com.dbthor.domain.certificado.service.CertificadoService;
 import com.dbthor.domain.certificado.service.DteSiiService;
 import io.swagger.annotations.Api;
@@ -12,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +40,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @SuppressWarnings("unused,WeakerAccess")
 public class CertificadoServiceController {
     static final String BASE_URI = "/certificado";
-
+    @Autowired
+    ApplicationContext context;
     @Autowired
     private CertificadoService certSrv;
     @Autowired
@@ -56,13 +61,13 @@ public class CertificadoServiceController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ServiceResponseType<ECertificadoDigital>> postCertificado(
             @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(defaultValue = "false") boolean guardarContrasenna,
-            @ApiParam(value = "Indicador del usuario que esta ingresando el certificado") @RequestParam(required = false,defaultValue ="") String usuario,
+            @ApiParam(value = "Indicador del usuario que esta ingresando el certificado") @RequestParam(required = false, defaultValue = "") String usuario,
             @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody CertificadoCreateRequest bodyData
             , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
     ) {
         if (trxId == null) trxId = UUID.randomUUID();
         log.debug("{} ----------------------------------------------------------------------------", trxId);
-        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(guardarContrasenna,usuario, bodyData, trxId));
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificado(guardarContrasenna, usuario, bodyData, trxId));
         ServiceResponseType<ECertificadoDigital> resp = new ServiceResponseType<>(trxId);
         try {
             log.debug("{} START", trxId);
@@ -75,7 +80,7 @@ public class CertificadoServiceController {
             ECertificadoDigital cert = certSrv.loadCertificado(bodyData, guardarContrasenna, trxId);
 
             if (cert != null) {
-                certSrv.guardarCertificadoLog(cert,usuario, trxId);
+                certSrv.guardarCertificadoLog(cert, usuario, trxId);
                 String token = dteSiiSrv.getSiiToken(UUID.fromString(cert.getId()), bodyData.certificado.password, trxId);
                 if (token == null)
                     throw new ServiceException(ServiceExceptionCodes.INVALIDO);
@@ -93,6 +98,52 @@ public class CertificadoServiceController {
         return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
+
+
+    /*----------------------------------------------------------------------------------------------------------------*/
+
+    /**
+     * Cargar Certificado
+     *
+     * @param bodyData JSON con datos del certificado
+     * @param trxId    Identificación de la transacción
+     * @return ECertificadoDigital
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "cargar", produces = "application/json")
+    @ApiOperation(value = "Cargar Certificado", notes = "Servicio que carga un certificado a una persona")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ServiceResponseType<CargarCertificadoResponse>> postCertificadoNew(
+            @ApiParam(value = "Indicador de si se guarda la contraseña o no") @RequestParam(defaultValue = "false") boolean guardarContrasenna,
+            @ApiParam(value = "Indicador del usuario que esta ingresando el certificado") @RequestParam(required = false, defaultValue = "") String usuario,
+            @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody CertificadoCreateRequest bodyData
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
+    ) {
+        if (trxId == null) trxId = UUID.randomUUID();
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificadoNew(guardarContrasenna, usuario, bodyData, trxId));
+        ServiceResponseType<CargarCertificadoResponse> resp = new ServiceResponseType<>(trxId);
+        try {
+            log.debug("{} START", trxId);
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
+            resp.add(link.withSelfRel());
+
+            CertificadoService certificadoService = context.getBean(CertificadoService.class);
+            if (bodyData == null)
+                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO);
+
+
+            CargarCertificadoResponse response = certificadoService.loadCertificadoNew(bodyData, guardarContrasenna, trxId);
+            resp.setDatos(response);
+        } catch (Exception e) {
+            ServiceException se = ServiceException.assignException(e);
+            resp.addError(se);
+            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+        }
+
+        log.debug("{} END", trxId);
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
+    }
 
     /*----------------------------------------------------------------------------------------------------------------*/
 
@@ -222,6 +273,76 @@ public class CertificadoServiceController {
         return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
+
+    /**
+     * Cargar Certificado
+     *
+
+     * @param trxId         Identificación de la transacción
+     * @return ECertificadoDigital
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/validar", produces = "application/json")
+    @ApiOperation(value = "Valida Certificado", notes = "Servicio que valida password y vigencia del certificado")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ServiceResponseType<ValidarCertificadoResponse>> postCertificadoValidarNew(
+            @ApiParam(value = "Objeto on el requermiento de creacion") @RequestBody ValidarCertificadoRequest bodyData
+            , @ApiParam(value = "Identificador de transacción") @RequestParam(required = false) UUID trxId
+    ) {
+
+        if (trxId == null) trxId = UUID.randomUUID();
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class).postCertificadoValidarNew(bodyData, trxId));
+        ServiceResponseType<ValidarCertificadoResponse> resp = new ServiceResponseType<>(trxId);
+        try {
+            log.debug("{} START", trxId);
+            log.debug("{} POST  {}", trxId, link.toUri().toString());
+            resp.add(link.withSelfRel());
+
+            if (bodyData == null) {
+                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO);
+            }
+
+            ValidarCertificadoResponse response = certSrv.verificaCertificadoNew(bodyData,trxId);
+            resp.setDatos(response);
+        } catch (Exception e) {
+            ServiceException se = ServiceException.assignException(e);
+            resp.addError(se);
+            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+        }
+
+        log.debug("{} END", trxId);
+        log.debug("{} ----------------------------------------------------------------------------", trxId);
+        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
+    }
+//       if (trxId == null) trxId = UUID.randomUUID();
+//        log.debug("{} ----------------------------------------------------------------------------", trxId);
+//        ControllerLinkBuilder link = linkTo(methodOn(CertificadoServiceController.class)
+//                .postCertificadoValidar(certificadoId, password, trxId));
+//        ServiceResponseType<Boolean> resp = new ServiceResponseType<>(trxId);
+//        try {
+//            log.debug("{} START", trxId);
+//            log.debug("{} POST  {}", trxId, link.toUri().toString());
+//            log.debug("{} PARAM certificadoId :{}", trxId, certificadoId);
+//            resp.add(link.withSelfRel());
+//
+//            if (password == null)
+//                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO, "Se requeire password del certificado");
+//
+//            Boolean valido = certSrv.verificaCertificado(certificadoId, password, trxId);
+//
+//            resp.setDatos(valido);
+//        } catch (Exception e) {
+//            ServiceException se = ServiceException.assignException(e);
+//            resp.addError(se);
+//            log.error("{} {}", trxId, ServiceResponseType.getErrorMsg(resp.getError()));
+//        }
+//
+//        log.debug("{} END", trxId);
+//        log.debug("{} ----------------------------------------------------------------------------", trxId);
+//        return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
+//    }
+
+
     /**
      * Elimina un Certificado
      *
@@ -300,7 +421,7 @@ public class CertificadoServiceController {
     }
 
 
-     /*----------------------------------------------------------------------------------------------------------------*/
+    /*----------------------------------------------------------------------------------------------------------------*/
 
     /**
      * Cargar Certificado
@@ -346,7 +467,7 @@ public class CertificadoServiceController {
         return new ResponseEntity<>(resp, ServiceResponseType.getHttpStatus(resp.getError(), HttpStatus.CREATED));
     }
 
-     /*----------------------------------------------------------------------------------------------------------------*/
+    /*----------------------------------------------------------------------------------------------------------------*/
 
     /**
      * Cargar Certificado
@@ -376,7 +497,7 @@ public class CertificadoServiceController {
 
             if (password == null)
                 throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO, "Se requeire password del certificado");
-            int respuesta  = certSrv.guardarCertificadoPass(certificadoId, password, trxId);
+            int respuesta = certSrv.guardarCertificadoPass(certificadoId, password, trxId);
 
             resp.setDatos(respuesta);
         } catch (Exception e) {

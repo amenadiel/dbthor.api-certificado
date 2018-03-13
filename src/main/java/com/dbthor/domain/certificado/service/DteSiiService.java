@@ -3,6 +3,8 @@ package com.dbthor.domain.certificado.service;
 import com.dbthor.domain.certificado.entity.RestCall;
 import com.dbthor.domain.certificado.entity.persona.EIdentificacion;
 import com.dbthor.domain.certificado.exception.ServiceException;
+import com.dbthor.domain.certificado.request.CargarCertificadoRequest;
+import com.dbthor.domain.certificado.response.Token.EToken;
 import com.dbthor.tools.JsonTools;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -18,13 +20,16 @@ import java.util.UUID;
 @Log4j2
 public class DteSiiService {
 
-    @Value("${url.srv.dte.sii.token.get}")  private String getDteSiiTokenUrl;
+    @Value("${url.srv.dte.sii.token.get}")
+    private String getDteSiiTokenUrl;
+    @Value("${url.srv.dte.sii.token.dos.get}")
+    private String getTokenSii;
 
     public String getSiiToken(UUID certId, String passwd, UUID trxId) throws ServiceException {
         log.debug("{} START", trxId);
         log.debug("{} PARAM certId : {}", trxId, certId);
 
-        RestCall<String> restCall =  new RestCall<>();
+        RestCall<String> restCall = new RestCall<>();
         try {
             URIBuilder url = new URIBuilder();
             url.setPath(getDteSiiTokenUrl);
@@ -34,21 +39,54 @@ public class DteSiiService {
 
             log.debug("{} WS URL: {}", trxId, url.toString());
 
-            String jsonResponse = restCall.callGet(url,trxId);
+            String jsonResponse = restCall.callGet(url, trxId);
 
-            ObjectMapper objectMapper =  JsonTools.getObjectMapperOmit();
+            ObjectMapper objectMapper = JsonTools.getObjectMapperOmit();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
 
-            String response = objectMapper.readValue(jsonResponse, new TypeReference<String>() {});
+            String response = objectMapper.readValue(jsonResponse, new TypeReference<String>() {
+            });
 
             log.debug("{} END", trxId);
             return response;
         } catch (Exception e) {
-            ServiceException fex=ServiceException.assignException(e);
+            ServiceException fex = ServiceException.assignException(e);
             log.error("{} {}", trxId, fex.getErrorLog());
             log.debug("{} END", trxId);
             throw fex;
         }
     }
+
+    public EToken getSiiTokenDos(CargarCertificadoRequest certificadoRequest, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+
+        RestCall<String> restCall = new RestCall<>();
+        EToken response = new EToken();
+        try {
+            URIBuilder url = new URIBuilder();
+            url.setPath(getTokenSii);
+
+
+            log.debug("{} WS URL: {}", trxId, url.toString());
+
+            String jsonResponse = restCall.callPost(url, certificadoRequest, trxId);
+
+            ObjectMapper objectMapper = JsonTools.getObjectMapperOmit();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+
+            response = objectMapper.readValue(jsonResponse, new TypeReference<EToken>() {
+            });
+
+            log.debug("{} END", trxId);
+            return response;
+        } catch (Exception e) {
+            ServiceException fex = ServiceException.assignException(e);
+            log.error("{} {}", trxId, fex.getErrorLog());
+            log.debug("{} END", trxId);
+            throw fex;
+        }
+    }
+
 }

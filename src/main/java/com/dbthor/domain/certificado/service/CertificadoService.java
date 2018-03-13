@@ -3,17 +3,28 @@ package com.dbthor.domain.certificado.service;
 
 import com.dbthor.domain.certificado.data.*;
 import com.dbthor.domain.certificado.data.entity.*;
+import com.dbthor.domain.certificado.database.DBConnector;
 import com.dbthor.domain.certificado.entity.CertificadoCreateRequest;
 import com.dbthor.domain.certificado.entity.CertificadoDigital;
+import com.dbthor.domain.certificado.entity.EClienteAutorizacion;
+import com.dbthor.domain.certificado.entity.IConsultaAutorizacion;
 import com.dbthor.domain.certificado.entity.persona.EPersona;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
+import com.dbthor.domain.certificado.request.CargarCertificadoRequest;
+import com.dbthor.domain.certificado.request.ValidarCertificadoRequest;
+import com.dbthor.domain.certificado.response.CargarCertificado.CargarCertificadoResponse;
+import com.dbthor.domain.certificado.response.Token.EToken;
+import com.dbthor.domain.certificado.response.ValidarCertificado.ValidarCertificadoResponse;
 import com.dbthor.tools.DateTools;
 import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +45,7 @@ import java.util.UUID;
  */
 @Service
 @Log4j2
-public class CertificadoService {
+public class CertificadoService extends Services{
     private static final Logger logger = LogManager.getLogger(CertificadoService.class.getName());
 
     @Autowired
@@ -54,7 +65,185 @@ public class CertificadoService {
     @Autowired
     private ICertificadoLogRepository iCertificadoLogRepository;
 
+    @Autowired
+    private IConsultaAutorizacion iConsultaAutorizacion;
+
+    @Autowired
+    ApplicationContext context;
+    @Getter
+    @Setter
+    DBConnector connDb;
+
     //------------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * Carga el certificado en la plataforma y lo valida.
+     *
+     * @param data CertificadoCreateRequest estructura del request
+     * @throws ServiceException Exception de la aplicacion.
+     */
+    @Transactional
+    public CargarCertificadoResponse loadCertificadoNew(CertificadoCreateRequest data, boolean guardarContrasenna, UUID trxId) throws ServiceException {
+        Date now = new Date();
+        ECertificadoDigital certificado = new ECertificadoDigital();
+        CargarCertificadoResponse response = new CargarCertificadoResponse();
+
+        //  Extrae data relevante de la data enviada
+        String personaId = data.getCliente().getPersonaId();
+        Short personaTipoIdent = data.getCliente().getTipoIdentificadorId();
+        String personaIdentVal = data.getCliente().getIdentificador();
+
+        String dataCert = data.getCertificado().getData();
+        String mail = data.getCertificado().getUserEmail();
+        String password = data.getCertificado().getPassword();
+
+        CertificadoDigital cert = new CertificadoDigital();
+        try {
+            List<EClienteAutorizacion> list = new ArrayList<>();
+
+            if (connDb == null) {
+                connDb = context.getBean(DBConnector.class);
+            }
+
+            if (guardarContrasenna == false) {
+                connDb.open(data.getRutFactoring());
+                iConsultaAutorizacion.setConnDb(connDb);
+                list = iConsultaAutorizacion.selectAutorizacion(data.cliente.getIdentificador());
+
+                if (list.size() > 0) {
+                    guardarContrasenna = list.stream().filter(x -> x.getActivoInd() == 1).count() > 0;
+                }
+
+            }
+
+
+            //  Agregar logica para validar si existe la persona
+            if (personaId != null && personaId.length() > 1) {
+                EPersona persona = persSrv.getPersona(UUID.fromString(personaId), trxId);
+                if (persona == null) {
+                    throw new ServiceException(ServiceExceptionCodes.NO_EXISTE_PERSONA, "No existe la persona para asociar el certificado");
+                }
+            }
+
+            if (personaId == null && personaTipoIdent != null && personaIdentVal != null) {
+
+                EPersona persona = persSrv.getPersonaByIdent(personaTipoIdent, personaIdentVal, true, trxId);
+                if (persona == null) {
+                    throw new ServiceException(ServiceExceptionCodes.NO_EXISTE_PERSONA, "No existe la persona (tipo, identificador) para asociar el certificado");
+                }
+                personaId = persona.getId();
+            }
+            ETipoCertificadoUso usoCert = tipoUsoCertRepo.findOne("SII-USO");
+
+            //Valida que el usuario no tengo un certificado asociado para un mismo uso
+            List<ECertificadoDigital> listCert;
+            try {
+                listCert = getCertificadoUso(UUID.fromString(personaId), usoCert.getId(), trxId);
+            } catch (ServiceException ce) {
+                listCert = new ArrayList<>();
+            }
+
+
+            Boolean existCert = false;
+            UUID certId = UUID.randomUUID();
+            if (listCert.size() > 0) {
+                certId = UUID.fromString(listCert.get(0).getId());
+                existCert = true;
+                //throw new ServiceException("CERT-ERR-PERSONA-USO-EXIST", "Ya existe un certificado con la relacion persona-uso");
+            }
+
+
+            //Sirve para validar que la clave sea la valida
+            //Valida que la clave sea valida para abrir el certificado
+            try {
+                // Abre el certificado y extrae la infomación basica
+                cert.loadCertificado(dataCert, mail, password, trxId.toString());
+            } catch (Exception e) {
+                response.setCertificadoDigital(null);
+                response.asignarCodigo(response.codes().ECI());
+                response.setMensaje(response.codes().msg());
+                return response;
+            }
+
+            //Sirve para validar la fecha de expiracion
+            //Valida si el certificado no esta caducado.
+            if (cert != null) {
+                if (!cert.getFechaExpiracion().after(now)) {
+                    response.setCertificadoDigital(null);
+                    response.asignarCodigo(response.codes().ECC());
+                    response.setMensaje(response.codes().msg());
+                    return response;
+                }
+            }
+
+
+            // Metodo envia a obtener token con el certificado en Base64 + la clave
+            CargarCertificadoRequest certificadoRequest = new CargarCertificadoRequest();
+            certificadoRequest.setCertificadoBase64(data.getCertificado().getData());
+            certificadoRequest.setContrasenna(data.getCertificado().getPassword());
+
+            try {
+                EToken eToken = dteSiiSrv.getSiiTokenDos(certificadoRequest, trxId);
+            } catch (Exception e) {
+                response.setCertificadoDigital(null);
+                response.asignarCodigo(response.codes().ENT());
+                response.setMensaje(response.codes().msg());
+                return response;
+
+            }
+
+
+            //Se genera los datos de la entidad Certificado
+            certificado.setId(certId.toString());
+            certificado.setDataEncode64Val(dataCert);
+            certificado.setCreacionFchhr(DateTools.convertUtil2SqlTimestamp(cert.getFechaCreacion()));
+            certificado.setExpiracionFchhr(DateTools.convertUtil2SqlTimestamp(cert.getFechaExpiracion()));
+            certificado.setUsuarioCorreoVal(mail);
+            certificado.setSubjectDnVal(cert.getSubject());
+            certificado.setIssuerDnVal(cert.getIssuer());
+            certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
+            certificado.setCertRut(data.getCertificado().getCertRut());
+
+
+            if (guardarContrasenna) {
+                certificado.setPasswordVal(password);
+            }
+
+
+            certRepo.save(certificado);
+            if (existCert) {
+                logger.info("{} Cargar certificado Historico", trxId);
+                guardarCertificadoDigitalHistorico(listCert.get(0), trxId);
+            }
+
+            //Se genera los datos de la entidad Persona Certificado y su uso
+            if (!existCert) {
+                EPersonaCertificadoDigital persUsoCert = new EPersonaCertificadoDigital();
+                persUsoCert.setPersonaId(personaId);
+                persUsoCert.setCertificadoDigitalId(certId.toString());
+                persUsoCert.setTipoCertificadoUso(usoCert);
+                personaCertRepo.save(persUsoCert);
+
+            }
+            // Se graba la informacion en la base de datos
+            logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
+
+            response.setCertificadoDigital(certificado);
+            response.asignarCodigo(response.codes().CGR());
+            response.setMensaje(response.codes().msg());
+
+
+        } catch (Exception e) {
+            ServiceException fex = ServiceException.assignException(e);
+            log.error("{} {}", trxId, fex.getErrorLog());
+            log.debug("{} END", trxId);
+            throw fex;
+        }
+
+        return response;
+    }
+
 
     /**
      * Carga el certificado en la plataforma y lo valida.
@@ -114,7 +303,12 @@ public class CertificadoService {
             }
 
             // Abre el certificado y extra la infomación basica
-            cert.loadCertificado(dataCert, mail, password, trxId.toString());
+            try {
+                cert.loadCertificado(dataCert, mail, password, trxId.toString());
+            } catch (Exception ex) {
+                return null;
+            }
+
 
             //Se genera los datos de la entidad Certificado
             certificado.setId(certId.toString());
@@ -126,15 +320,18 @@ public class CertificadoService {
             certificado.setIssuerDnVal(cert.getIssuer());
             certificado.setArchivoNombre(data.getCertificado().getArchivoNombre());
             certificado.setCertRut(data.getCertificado().getCertRut());
+
+
             if (guardarContrasenna) {
                 certificado.setPasswordVal(password);
             }
 
 
             certRepo.save(certificado);
-            logger.info("{} Cargar certificado Historico", trxId);
-            guardarCertificadoDigitalHistorico(certificado, trxId);
-
+            if (existCert) {
+                logger.info("{} Cargar certificado Historico", trxId);
+                guardarCertificadoDigitalHistorico(listCert.get(0), trxId);
+            }
 
             //Se genera los datos de la entidad Persona Certificado y su uso
             if (!existCert) {
@@ -154,9 +351,9 @@ public class CertificadoService {
 //            }
 
 
-        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-            log.error("{} {}", trxId, e);
-            throw new ServiceException(ServiceExceptionCodes.ERROR_CARGA_CERT, e.getCause());
+//        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+//            log.error("{} {}", trxId, e);
+//            throw new ServiceException(ServiceExceptionCodes.ERROR_CARGA_CERT, e.getCause());
         } catch (Exception e) {
             ServiceException fex = ServiceException.assignException(e);
             log.error("{} {}", trxId, fex.getErrorLog());
@@ -362,7 +559,8 @@ public class CertificadoService {
 
     }
 
-    public List<ECertificadoDigital> getCertificadoUso(UUID personaId, String usoId, UUID trxId) throws ServiceException {
+    public List<ECertificadoDigital> getCertificadoUso(UUID personaId, String usoId, UUID trxId) throws
+            ServiceException {
         log.debug("{} START", trxId);
         log.debug("{} PARAM personaId: {}", trxId, personaId);
         log.debug("{} PARAM usoId: {}", trxId, usoId);
@@ -417,8 +615,9 @@ public class CertificadoService {
             log.debug("{} Validando que exsita el certificado", trxId);
             ECertificadoDigital certData = getCertificadoEntity(certificadoId, trxId);
 
-            if (certData == null || certData.getDataEncode64Val() == null)
+            if (certData == null || certData.getDataEncode64Val() == null) {
                 throw new ServiceException(ServiceExceptionCodes.NO_EXISTE_CERTIFICADO);
+            }
 
 
             // Abre el certificado y extra la infomación basica
@@ -447,8 +646,77 @@ public class CertificadoService {
         }
     }
 
+    public ValidarCertificadoResponse verificaCertificadoNew(ValidarCertificadoRequest validar, UUID trxId) throws ServiceException {
+        log.debug("{} START", trxId);
+        log.debug("{} PARAM certificadoId: {}", trxId, validar.getCertificadoId());
+        log.trace("{} PARAM password     : {}", trxId, validar.getContrasenna());
+        try {
+            CertificadoDigital cert = new CertificadoDigital();
+            ValidarCertificadoResponse response = new ValidarCertificadoResponse();
+            Date now = new Date();
 
-    public ServiceExceptionCodes verificaCertificadoConError(UUID certificadoId, String password, UUID trxId) throws ServiceException {
+            log.debug("{} Validando que exsita el certificado", trxId);
+            ECertificadoDigital certData = getCertificadoEntity(UUID.fromString(validar.getCertificadoId()), trxId);
+
+
+            //Valida que no existe el certificado enviado
+            if (certData == null || certData.getDataEncode64Val() == null) {
+                response.setRespuesta(false);
+                response.asignarCodigo(response.codes().ENE());
+                response.setMensaje(response.codes().msg());
+                return response;
+            }
+
+            //Sirve para validar que la clave sea la valida
+            //Valida que la clave sea valida para abrir el certificado
+            try {
+                // Abre el certificado y extrae la infomación basica
+                cert.loadCertificado(certData.getDataEncode64Val(), "", validar.getContrasenna(), trxId.toString());
+            } catch (Exception e) {
+                response.setRespuesta(false);
+                response.asignarCodigo(response.codes().ECI());
+                response.setMensaje(response.codes().msg());
+                return response;
+            }
+
+            //Sirve para validar la fecha de expiracion
+            //Valida si el certificado no esta caducado.
+            if (cert != null) {
+                if (!cert.getFechaExpiracion().after(now)) {
+                    response.setRespuesta(false);
+                    response.asignarCodigo(response.codes().ECC());
+                    response.setMensaje(response.codes().msg());
+                    return response;
+                }
+
+            }
+
+            // Metodo envia a obtener token con el certificadoId + la clave
+            try {
+                String token = dteSiiSrv.getSiiToken(UUID.fromString(validar.getCertificadoId()), validar.getContrasenna(), trxId);
+            } catch (Exception e) {
+                response.setRespuesta(false);
+                response.asignarCodigo(response.codes().ENT());
+                response.setMensaje(response.codes().msg());
+                return response;
+            }
+
+            log.debug("{} END", trxId);
+            response.setRespuesta(true);
+            response.asignarCodigo(response.codes().CVA());
+            response.setMensaje(response.codes().msg());
+            return response;
+        } catch (Exception e) {
+            ServiceException se = ServiceException.assignException(e);
+            log.error("{} {}", trxId, se.getErrorLog());
+            log.debug("{} END", trxId);
+            throw se;
+        }
+    }
+
+
+    public ServiceExceptionCodes verificaCertificadoConError(UUID certificadoId, String password, UUID trxId) throws
+            ServiceException {
         log.debug("{} START", trxId);
         log.debug("{} PARAM certificadoId: {}", trxId, certificadoId);
         log.trace("{} PARAM password     : {}", trxId, password);

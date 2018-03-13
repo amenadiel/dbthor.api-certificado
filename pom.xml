@@ -52,7 +52,8 @@
                 <spring.datasource.username>root</spring.datasource.username>
                 <spring.datasource.password>dbt2016</spring.datasource.password>
                 <!--Base de datos esquemas -->
-                    <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
+                <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
+
 
                 <url.srv.base>http://10.10.100.210:8080</url.srv.base>
                 <url.srv.persona.path>/api-persona</url.srv.persona.path>
@@ -78,10 +79,14 @@
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
                 <!--Base de datos esquemas -->
                 <db.dominio.certificado.catalogSchema>ds_dbthor_dte</db.dominio.certificado.catalogSchema>
+                <spring.datasource.url.dbthor>qa_dbthor</spring.datasource.url.dbthor>
+
 
                 <url.srv.base>http://10.0.0.47:8050</url.srv.base>
                 <url.srv.persona.path>/qa-api-persona-v.1.0</url.srv.persona.path>
                 <url.srv.dte.path>/qa-api-dte-v.1.0</url.srv.dte.path>
+                <url.srv.sii.path>/api-ext-srv-sii-v.1.0</url.srv.sii.path>
+
 
             </properties>
             <activation>

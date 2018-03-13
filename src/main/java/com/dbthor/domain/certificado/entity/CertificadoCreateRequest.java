@@ -1,6 +1,7 @@
 package com.dbthor.domain.certificado.entity;
 
 
+import com.dbthor.domain.certificado.request.FactoringRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +9,7 @@ import lombok.Setter;
 /**
  * Created by CSATTLER on 07-02-2017.
  */
-public class CertificadoCreateRequest {
+public class CertificadoCreateRequest extends FactoringRequest {
     public class ClienteIdent {
         @Setter @Getter @JsonProperty("id") String personaId;
         @Setter @Getter @JsonProperty("tipoIdentificadorId") Short tipoIdentificadorId;
