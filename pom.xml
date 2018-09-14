@@ -86,6 +86,7 @@
                 <url.srv.persona.path>/qa-api-persona-v.1.0</url.srv.persona.path>
                 <url.srv.dte.path>/qa-api-dte-v.1.0</url.srv.dte.path>
                 <url.srv.sii.path>/api-ext-srv-sii-v.1.0</url.srv.sii.path>
+                <url.srv.dbthor.notificacion>/api-srv-notificacion-v.1.0</url.srv.dbthor.notificacion>
 
 
             </properties>
@@ -108,11 +109,12 @@
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
                 <!--Base de datos esquemas -->
                 <db.dominio.certificado.catalogSchema>dbthor_dte</db.dominio.certificado.catalogSchema>
-
+                <spring.datasource.url.dbthor>dbthor</spring.datasource.url.dbthor>
                 <url.srv.base>http://10.0.0.169</url.srv.base>
                 <url.srv.persona.path>/api-persona-v.1.0</url.srv.persona.path>
                 <url.srv.dte.path>/api-dte-v.1.0</url.srv.dte.path>
-
+                <url.srv.sii.path>/api-ext-srv-sii-v.1.0</url.srv.sii.path>
+                <url.srv.dbthor.notificacion>/api-srv-notificacion-v.1.0</url.srv.dbthor.notificacion>
             </properties>
             <activation>
                 <activeByDefault>false</activeByDefault>

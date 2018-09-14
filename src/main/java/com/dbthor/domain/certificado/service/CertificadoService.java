@@ -1,13 +1,14 @@
 package com.dbthor.domain.certificado.service;
 
 
+import com.dbthor.domain.certificado.cliente.mail.ClienteMailService;
+import com.dbthor.domain.certificado.cliente.mail.entity.MailMessage;
+import com.dbthor.domain.certificado.cliente.mail.entity.TextoMail;
+import com.dbthor.domain.certificado.cliente.mail.entity.toolsMail;
 import com.dbthor.domain.certificado.data.*;
 import com.dbthor.domain.certificado.data.entity.*;
 import com.dbthor.domain.certificado.database.DBConnector;
-import com.dbthor.domain.certificado.entity.CertificadoCreateRequest;
-import com.dbthor.domain.certificado.entity.CertificadoDigital;
-import com.dbthor.domain.certificado.entity.EClienteAutorizacion;
-import com.dbthor.domain.certificado.entity.IConsultaAutorizacion;
+import com.dbthor.domain.certificado.entity.*;
 import com.dbthor.domain.certificado.entity.persona.EPersona;
 import com.dbthor.domain.certificado.exception.ServiceException;
 import com.dbthor.domain.certificado.exception.ServiceExceptionCodes;
@@ -17,13 +18,17 @@ import com.dbthor.domain.certificado.response.CargarCertificado.CargarCertificad
 import com.dbthor.domain.certificado.response.Token.EToken;
 import com.dbthor.domain.certificado.response.ValidarCertificado.ValidarCertificadoResponse;
 import com.dbthor.tools.DateTools;
+import com.dbthor.tools.RutTools;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +38,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Capa de servicio para el DTE
@@ -45,7 +48,7 @@ import java.util.UUID;
  */
 @Service
 @Log4j2
-public class CertificadoService extends Services{
+public class CertificadoService extends Services {
     private static final Logger logger = LogManager.getLogger(CertificadoService.class.getName());
 
     @Autowired
@@ -74,6 +77,16 @@ public class CertificadoService extends Services{
     @Setter
     DBConnector connDb;
 
+    @Value("${mail.casilla.soporte}")
+    private String mailSoporte;
+
+    @Value("${mail.casilla.envio}")
+    private String mailSalida;
+
+    @Autowired
+    private IMailRepo iMailRepo;
+
+
     //------------------------------------------------------------------------------------------------------------------
 
 
@@ -83,7 +96,7 @@ public class CertificadoService extends Services{
      * @param data CertificadoCreateRequest estructura del request
      * @throws ServiceException Exception de la aplicacion.
      */
-    @Transactional
+//    @Transactional
     public CargarCertificadoResponse loadCertificadoNew(CertificadoCreateRequest data, boolean guardarContrasenna, UUID trxId) throws ServiceException {
         Date now = new Date();
         ECertificadoDigital certificado = new ECertificadoDigital();
@@ -109,6 +122,7 @@ public class CertificadoService extends Services{
             if (guardarContrasenna == false) {
                 connDb.open(data.getRutFactoring());
                 iConsultaAutorizacion.setConnDb(connDb);
+                iMailRepo.setConnDb(connDb);
                 list = iConsultaAutorizacion.selectAutorizacion(data.cliente.getIdentificador());
 
                 if (list.size() > 0) {
@@ -229,10 +243,33 @@ public class CertificadoService extends Services{
             // Se graba la informacion en la base de datos
             logger.info("{} Certificado Cargado y almacenado en base de datos", trxId);
 
+            JSONObject json = valores(cert.getSubject());
+            TextoMail txtMail = null;
+
+            String nombreFact = iMailRepo.getNombreFactoring(data.getRutFactoring());
+
+            json.put("factoring", nombreFact);
+            json.put("idcertificado", certId.toString());
+            json.put("fechacarga",  DateTools.Date2String(new Date(), "dd-MM-yyyy"));
+
+            if (json.getString("email") != null && !json.getString("email").isEmpty()) {
+                txtMail = iMailRepo.getTexto(3L, trxId);
+                if (txtMail != null) {
+                    txtMail = toolsMail.generaTextoNotificacionJson(txtMail, json);
+//                    enviarCorreo(txtMail, "jtoro@dbthor.com", trxId);
+                    enviarCorreo(txtMail, json.getString("email"), trxId);
+                }
+            }
+            if (txtMail != null) {
+                txtMail = iMailRepo.getTexto(2L, trxId);
+                txtMail = toolsMail.generaTextoNotificacionJson(txtMail, json);
+//                enviarCorreo(txtMail, "jtoro@dbthor.com", trxId);
+                enviarCorreo(txtMail, mailSoporte, trxId);
+            }
+
             response.setCertificadoDigital(certificado);
             response.asignarCodigo(response.codes().CGR());
             response.setMensaje(response.codes().msg());
-
 
         } catch (Exception e) {
             ServiceException fex = ServiceException.assignException(e);
@@ -244,6 +281,56 @@ public class CertificadoService extends Services{
         return response;
     }
 
+
+    /**
+     * Metodo para obtener los valores de un certificado.
+     *
+     * @param var
+     * @return
+     * @throws JSONException
+     */
+    public JSONObject valores(String var) throws JSONException {
+        String[] part = var.split(",");
+        String nombre = "";
+        String email = "";
+        String rut = "";
+        JSONObject json = new JSONObject();
+        if (part.length > 0) {
+            for (int i = 0; i < part.length; i++) {
+                if (part[i].contains("CN")) {
+                    nombre = part[i].split("=")[1];
+//                } else if (part[i].contains("EMAILADDRESS")) {
+//                    email = part[i].split("=")[1];
+                } else if (part[i].contains("SERIALNUMBER")) {
+                    rut = part[i].split("=")[1];
+                }
+            }
+        }
+        json.put("nombrecliente", nombre);
+//        json.put("email", "jtoro@dbthor.com");
+        json.put("email", email);
+        json.put("rutcertificado", rut.isEmpty() ? "" : RutTools.FormatearRut(rut));
+
+        return json;
+    }
+
+
+    public void enviarCorreo(TextoMail txtMail, String mailCliente, UUID trxId) throws ServiceException {
+        MailMessage mail = new MailMessage();
+        List<String> sendTO = new ArrayList<>();
+        List<String> copyTO = new ArrayList<>();
+        mail.setTema(txtMail.getTitulo());
+        String msg = txtMail.getTexto();
+        mail.setMensaje(msg);
+        sendTO.add(mailCliente);
+        copyTO.add("jtoro@dbthor.com");
+
+        mail.setListaCorreoCC(copyTO);
+        mail.setListaCorreoTO(sendTO);
+
+        mail = ClienteMailService.enviarCorreo(mailSalida, mail, trxId);
+
+    }
 
     /**
      * Carga el certificado en la plataforma y lo valida.

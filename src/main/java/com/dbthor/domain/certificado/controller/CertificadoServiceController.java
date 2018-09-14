@@ -128,10 +128,6 @@ public class CertificadoServiceController {
             resp.add(link.withSelfRel());
 
             CertificadoService certificadoService = context.getBean(CertificadoService.class);
-            if (bodyData == null)
-                throw new ServiceException(ServiceExceptionCodes.POST_BODY_REQUEST_NULO);
-
-
             CargarCertificadoResponse response = certificadoService.loadCertificadoNew(bodyData, guardarContrasenna, trxId);
             resp.setDatos(response);
         } catch (Exception e) {
