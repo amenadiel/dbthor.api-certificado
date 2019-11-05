@@ -83,7 +83,7 @@
 
 
                 <url.srv.base>http://10.0.0.47:8050</url.srv.base>
-                <url.srv.persona.path>/qa-api-persona-v.1.0</url.srv.persona.path>
+                <url.srv.persona.path>/api-persona-v.1.0</url.srv.persona.path>
                 <url.srv.dte.path>/qa-api-dte-v.1.0</url.srv.dte.path>
                 <url.srv.sii.path>/api-ext-srv-sii-v.1.0</url.srv.sii.path>
                 <url.srv.dbthor.notificacion>/api-srv-notificacion-v.1.0</url.srv.dbthor.notificacion>
@@ -103,7 +103,7 @@
                 <warFileName>${profilePrefix}${project.artifactId}-${project.version}</warFileName>
                 <!--Base de datos -->
                 <spring.datasource.url>
-                    jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/dbthor_dte
+                    jdbc:mysql://dbthor-shared.cfgxtuf683rp.us-east-1.rds.amazonaws.com:3306/dbthor_dte?autoReconnect=true
                 </spring.datasource.url>
                 <spring.datasource.username>root</spring.datasource.username>
                 <spring.datasource.password>anmaca.2011</spring.datasource.password>
